@@ -1,0 +1,1 @@
+This application aims to provide a simulation of a large scale, multi client banking system. The application will connect to other clients via TCP/IP connections and provide human clients with human tellers. There will be an ATM interface and a teller interface for customer use. This application requires security measures and 
