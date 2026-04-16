@@ -1,0 +1,639 @@
+persons and main core
+
+@startuml
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+
+enum AccountStatus {
+  OPEN
+  CLOSED
+  SUSPENDED
+  FLAGGED
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CREDIT
+}
+
+class Address {
+  - streetNumber : int
+  - apartmentNumber : String
+  - street : String
+  - city : String
+  - zipCode : String
+  - state : String
+  + print() : String
+}
+
+class Person {
+  - name : String
+  - address : Address
+}
+
+class Customer {
+  - joinDate : Date
+  - lastTellerVisit : Date
+  - lastAtmVisit : Date
+  - username : String
+  - pin : int
+  + changePin(newPin : int) : void
+}
+
+class Teller {
+  - registerNumber : int
+  + withdraw(account : Account, amount : double) : double
+  + deposit(account : Account, amount : double) : double
+}
+
+class Account {
+  - accountType : AccountType
+  - accountStatus : AccountStatus
+  - authorizedUsers : Customer[*]
+  - balance : double
+  - lastUsed : Date
+
+  + addAuthorizedUser(user : Customer)
+  + removeAuthorizedUser(user : Customer)
+  + isSuspended() : boolean
+  + freeze() : boolean
+  + unfreeze() : boolean
+  + closeAccount()
+  + withdraw(amount : double) : double
+  + deposit(amount : double) : double
+}
+
+class CheckingAccount {
+  - withdrawalLimit : double
+  - depositLimit : double
+  + transferToSavings(account : SavingsAccount, amount : double) : double
+  + transferToCredit(account : CreditAccount, amount : double) : double
+}
+
+class SavingsAccount {
+  - interestRate : double
+  - minimumBalance : double
+  + applyInterest() : void
+}
+
+class CreditAccount {
+  - creditLimit : double
+  - interestRate : double
+  + makePayment(amount : double) : void
+  + charge(amount : double) : double
+}
+
+Customer --|> Person
+Teller --|> Person
+
+CheckingAccount --|> Account
+SavingsAccount --|> Account
+CreditAccount --|> Account
+
+Person *-- Address
+Customer "1" -- "0..*" Account
+Teller ..> Account
+
+Account .right.> AccountType
+Account .left.> AccountStatus
+
+
+
+Person --> Account
+Customer -up-> Teller
+Customer --> CheckingAccount
+Teller --> SavingsAccount
+CheckingAccount --> SavingsAccount
+SavingsAccount --> CreditAccount
+
+@enduml
+
+======================================================================================================
+======================================================================================================
+
+======================================================================================================
+======================================================================================================
+
+======================================================================================================
+======================================================================================================
+
+======================================================================================================
+======================================================================================================
+
+
+VALIDATION MAIN CORE
+
+
+@startuml
+top to bottom direction
+skinparam classAttributeIconSize 0
+skinparam nodesep 20
+skinparam ranksep 25
+
+class Customer {
+  - joinDate : Date
+  - lastTellerVisit : Date
+  - lastAtmVisit : Date
+  - username : String
+  - pin : int
+  + changePin(newPin : int) : void
+}
+
+class Account {
+  - accountType : AccountType
+  - accountStatus : AccountStatus
+  - authorizedUsers : Customer[*]
+  - balance : double
+  - lastUsed : Date
+  - server : Server
+
+  + addAuthorizedUser(user : Customer)
+  + removeAuthorizedUser(user : Customer)
+  + isSuspended() : boolean
+  + freeze() : boolean
+  + unfreeze() : boolean
+  + closeAccount()
+  + withdraw(amount : double) : double
+  + deposit(amount : double) : double
+}
+
+class CheckingAccount {
+  - withdrawalLimit : double
+  - depositLimit : double
+  + transferToSavings(account : SavingsAccount, amount : double) : double
+  + transferToCredit(account : CreditAccount, amount : double) : double
+}
+
+class SavingsAccount {
+  - interestRate : double
+  - minimumBalance : double
+  + applyInterest() : void
+}
+
+class CreditAccount {
+  - creditLimit : double
+  - interestRate : double
+  + makePayment(amount : double) : void
+  + charge(amount : double) : double
+}
+
+abstract class AccountValidator {
+  + validateAccountStatus(account : Account) : ValidationResult
+  + validateAuthorizedUser(account : Account, customer : Customer) : ValidationResult
+  + validatePositiveAmount(amount : double) : ValidationResult
+}
+
+class CheckingAccountValidator {
+  + validateWithdrawal(account : CheckingAccount, amount : double) : ValidationResult
+  + validateDeposit(account : CheckingAccount, amount : double) : ValidationResult
+  + validateTransferToSavings(account : CheckingAccount, target : SavingsAccount, amount : double) : ValidationResult
+  + validateTransferToCredit(account : CheckingAccount, target : CreditAccount) : ValidationResult
+}
+
+class SavingsAccountValidator {
+  + validateWithdrawal(account : SavingsAccount, amount : double) : ValidationResult
+  + validateDeposit(account : SavingsAccount, amount : double) : ValidationResult
+  + validateMinimumBalance(account : SavingsAccount, amount : double) : ValidationResult
+}
+
+class CreditAccountValidator {
+  + validateCharge(account : CreditAccount, amount : double) : ValidationResult
+  + validatePayment(account : CreditAccount, amount : double) : ValidationResult
+  + validateCreditLimit(account : CreditAccount, amount : double) : ValidationResult
+}
+
+class ValidationResult {
+  - valid : boolean
+  - message : String
+  + isValid() : boolean
+  + setValid() : boolean
+  + getMessage() : String
+  + setMessage(message : String) : void
+}
+
+CheckingAccount -down-|> Account
+SavingsAccount -down-|> Account
+CreditAccount -down-|> Account
+
+CheckingAccountValidator -down-|> AccountValidator
+SavingsAccountValidator -down-|> AccountValidator
+CreditAccountValidator -down-|> AccountValidator
+
+AccountValidator ..> ValidationResult
+AccountValidator ..> Customer
+
+CheckingAccountValidator ..> CheckingAccount
+CheckingAccountValidator ..> SavingsAccount
+CheckingAccountValidator ..> CreditAccount
+SavingsAccountValidator ..> SavingsAccount
+CreditAccountValidator ..> CreditAccount
+
+' layout control
+Customer -[hidden]down-> Account
+Account -[hidden]down-> CheckingAccount
+CheckingAccount -[hidden]down-> SavingsAccount
+SavingsAccount -[hidden]down-> CreditAccount
+
+Account -[hidden]right-> AccountValidator
+AccountValidator -[hidden]down-> CheckingAccountValidator
+CheckingAccountValidator -[hidden]down-> SavingsAccountValidator
+SavingsAccountValidator -[hidden]down-> CreditAccountValidator
+CreditAccountValidator -[hidden]down-> ValidationResult
+
+@enduml
+
+======================================================================================================
+======================================================================================================
+
+======================================================================================================
+======================================================================================================
+
+======================================================================================================
+======================================================================================================
+
+======================================================================================================
+======================================================================================================
+
+BASIC INFRASTRUCTURE
+
+@startuml
+top to bottom direction
+skinparam classAttributeIconSize 0
+skinparam nodesep 18
+skinparam ranksep 20
+
+class Server {
+  - ip : String
+  - logger : Logger
+  - checkingValidator : CheckingAccountValidator
+  - savingsValidator : SavingsAccountValidator
+  - creditValidator : CreditAccountValidator
+
+  + getLogs() : Log[*]
+  + logEvent(event : Log) : void
+  + validateLogAccess(teller : Teller) : boolean
+}
+
+class Logger {
+  - logs : Log[*]
+
+  + addLog(log : Log)
+  + getLogs() : Log[*]
+}
+
+class Log {
+  - date : Date
+  - transactionType : TransactionType
+  - comment : String
+  - amount : double
+}
+
+class ATM {
+  - cash : double
+  - failedAttempts : int
+  - serviceCompleted : boolean
+  - serverIp : String
+
+  + withdraw(amount : double) : double
+  + deposit(amount : double) : double
+  + checkBalance(account : Account) : double
+  + login(customerId : int, pin : int) : boolean
+}
+
+class Teller {
+  - registerNumber : int
+
+  + withdraw(account : Account, amount : double) : double
+  + deposit(account : Account, amount : double) : double
+}
+
+class Account {
+  - accountType : AccountType
+  - accountStatus : AccountStatus
+  - authorizedUsers : Customer[*]
+  - balance : double
+  - lastUsed : Date
+  - server : Server
+
+  + addAuthorizedUser(user : Customer)
+  + removeAuthorizedUser(user : Customer)
+  + isSuspended() : boolean
+  + freeze() : boolean
+  + unfreeze() : boolean
+  + closeAccount()
+  + withdraw(amount : double) : double
+  + deposit(amount : double) : double
+}
+
+class CheckingAccountValidator {
+  + validateWithdrawal(account : CheckingAccount, amount : double) : ValidationResult
+  + validateDeposit(account : CheckingAccount, amount : double) : ValidationResult
+  + validateTransferToSavings(account : CheckingAccount, target : SavingsAccount, amount : double) : ValidationResult
+  + validateTransferToCredit(account : CheckingAccount, target : CreditAccount, amount : double) : ValidationResult
+}
+
+class SavingsAccountValidator {
+  + validateWithdrawal(account : SavingsAccount, amount : double) : ValidationResult
+  + validateDeposit(account : SavingsAccount, amount : double) : ValidationResult
+  + validateMinimumBalance(account : SavingsAccount, amount : double) : ValidationResult
+}
+
+class CreditAccountValidator {
+  + validateCharge(account : CreditAccount, amount : double) : ValidationResult
+  + validatePayment(account : CreditAccount, amount : double) : ValidationResult
+  + validateCreditLimit(account : CreditAccount, amount : double) : ValidationResult
+}
+
+enum TransactionType {
+  WITHDRAWAL
+  DEPOSIT
+  TRANSFER
+  PAYMENT
+  ERROR
+  OTHER
+}
+
+Log .up.> TransactionType
+
+Server "1" *-- "1" Logger
+Logger "1" *-- "0..*" Log
+
+Server --> CheckingAccountValidator
+Server --> SavingsAccountValidator
+Server --> CreditAccountValidator
+
+ATM ..> Server
+ATM ..> Log
+Teller ..> Server
+Server ..> Account
+
+
+
+
+Server -[hidden]down-> Account
+Account -[hidden]down-> ATM
+
+
+CheckingAccountValidator -[hidden]down-> SavingsAccountValidator
+SavingsAccountValidator -[hidden]down-> CreditAccountValidator
+SavingsAccountValidator -[hidden]up->CheckingAccountValidator
+CreditAccountValidator -[hidden]up->CheckingAccountValidator
+
+ATM -[hidden]right-> SavingsAccountValidator
+
+Server -[hidden]down-> CheckingAccountValidator
+
+
+Teller -[hidden]left-> Server
+
+
+Server -[hidden]right-> Logger
+Logger -[hidden]down-> Log
+
+@enduml
+
+======================================================================================================
+======================================================================================================
+
+======================================================================================================
+======================================================================================================
+
+======================================================================================================
+======================================================================================================
+
+======================================================================================================
+======================================================================================================
+
+FULL UML
+
+@startuml
+' --- Layout Settings for Documents ---
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 30
+skinparam ranksep 30
+
+' --- Enumerations ---
+enum AccountStatus {
+  OPEN
+  CLOSED
+  SUSPENDED
+  FLAGGED
+}
+
+enum AccountType {
+  CHECKING
+  SAVINGS
+  CREDIT
+}
+
+enum TransactionType {
+  WITHDRAWAL
+  DEPOSIT
+  TRANSFER
+  PAYMENT
+  ERROR
+  OTHER
+}
+
+' --- Identity & Users ---
+class Address {
+  - streetNumber : int
+  - apartmentNumber : String
+  - street : String
+  - city : String
+  - zipCode : String
+  - state : String
+  + print() : String
+}
+
+class Person {
+  - name : String
+  - address : Address
+}
+
+class Customer {
+  - joinDate : Date
+  - lastTellerVisit : Date
+  - lastAtmVisit : Date
+  - username : String
+  - pin : int
+  + changePin(newPin : int) : void
+}
+
+class Teller {
+  - registerNumber : int
+  + withdraw(account : Account, amount : double) : double
+  + deposit(account : Account, amount : double) : double
+}
+
+' --- Account Core ---
+class Account {
+  - accountType : AccountType
+  - accountStatus : AccountStatus
+  - authorizedUsers : Customer[*]
+  - balance : double
+  - lastUsed : Date
+  - server : Server
+  + addAuthorizedUser(user : Customer)
+  + removeAuthorizedUser(user : Customer)
+  + isSuspended() : boolean
+  + freeze() : boolean
+  + unfreeze() : boolean
+  + closeAccount()
+  + withdraw(amount : double) : double
+  + deposit(amount : double) : double
+}
+
+class CheckingAccount {
+  - withdrawalLimit : double
+  - depositLimit : double
+  + transferToSavings(account : SavingsAccount, amount : double) : double
+  + transferToCredit(account : CreditAccount, amount : double) : double
+}
+
+class SavingsAccount {
+  - interestRate : double
+  - minimumBalance : double
+  + applyInterest() : void
+}
+
+class CreditAccount {
+  - creditLimit : double
+  - interestRate : double
+  + makePayment(amount : double) : void
+  + charge(amount : double) : double
+}
+
+' --- Validation Logic ---
+class ValidationResult {
+  - valid : boolean
+  - message : String
+  + isValid() : boolean
+  + setValid(valid : boolean) : void
+  + getMessage() : String
+  + setMessage(message : String) : void
+}
+
+abstract class AccountValidator {
+  + validateAccountStatus(account : Account) : ValidationResult
+  + validateAuthorizedUser(account : Account, customer : Customer) : ValidationResult
+  + validatePositiveAmount(amount : double) : ValidationResult
+}
+
+class CheckingAccountValidator {
+  + validateWithdrawal(account : CheckingAccount, amount : double) : ValidationResult
+  + validateDeposit(account : CheckingAccount, amount : double) : ValidationResult
+  + validateTransferToSavings(account : CheckingAccount, target : SavingsAccount, amount : double) : ValidationResult
+  + validateTransferToCredit(account : CheckingAccount, target : CreditAccount, amount : double) : ValidationResult
+  + validateWithdrawalLimit(account : CheckingAccount, amount : double) : ValidationResult
+  + validateDepositLimit(account : CheckingAccount, amount : double) : ValidationResult
+  + validateSufficientFunds(account : CheckingAccount, amount : double) : ValidationResult
+}
+
+class SavingsAccountValidator {
+  + validateWithdrawal(account : SavingsAccount, amount : double) : ValidationResult
+  + validateDeposit(account : SavingsAccount, amount : double) : ValidationResult
+  + validateInterestRate(account : SavingsAccount) : ValidationResult
+  + validateMinimumBalance(account : SavingsAccount, amount : double) : ValidationResult
+  + validateSufficientFunds(account : SavingsAccount, amount : double) : ValidationResult
+}
+
+class CreditAccountValidator {
+  + validateCharge(account : CreditAccount, amount : double) : ValidationResult
+  + validatePayment(account : CreditAccount, amount : double) : ValidationResult
+  + validateCreditLimit(account : CreditAccount, amount : double) : ValidationResult
+  + validateInterestRate(account : CreditAccount) : ValidationResult
+}
+
+' --- System Infrastructure ---
+class Server {
+  - ip : String
+  - logger : Logger
+  - checkingValidator : CheckingAccountValidator
+  - savingsValidator : SavingsAccountValidator
+  - creditValidator : CreditAccountValidator
+  + getLogs() : Log[*]
+  + logEvent(event : Log) : void
+  + validateLogAccess(teller : Teller) : boolean
+}
+
+class Logger {
+  - logs : Log[*]
+  + addLog(log : Log)
+  + getLogs() : Log[*]
+  + logEvent(event : Log) : void
+}
+
+class Log {
+  - date : Date
+  - transactionType : TransactionType
+  - comment : String
+  - amount : double
+}
+
+class ATM {
+  - cash : double
+  - failedAttempts : int
+  - serviceCompleted : boolean
+  - serverIp : String
+  + withdraw(amount : double) : double
+  + deposit(amount : double) : double
+  + checkBalance(account : Account) : double
+  + login(customerId : int, pin : int) : boolean
+  + displayConfirmation() : void
+  + displayError() : void
+}
+
+' --- Relationship Definitions ---
+Customer --|> Person
+Teller --|> Person
+
+CheckingAccount --|> Account
+SavingsAccount --|> Account
+CreditAccount --|> Account
+
+CheckingAccountValidator --|> AccountValidator
+SavingsAccountValidator --|> AccountValidator
+CreditAccountValidator --|> AccountValidator
+
+Person *-- Address
+Customer "1" -- "0..*" Account
+Teller ..> Account
+
+Account ..> AccountType
+Account ..> AccountStatus
+Log ..> TransactionType
+
+Account --> Server
+
+Server "1" *-- "1" Logger
+Logger "1" *-- "0..*" Log
+
+Server --> CheckingAccountValidator
+Server --> SavingsAccountValidator
+Server --> CreditAccountValidator
+
+ATM ..> Server
+ATM ..> Log
+Teller ..> Server
+
+AccountValidator ..> ValidationResult
+AccountValidator ..> Customer
+CheckingAccountValidator ..> CheckingAccount
+CheckingAccountValidator ..> SavingsAccount
+CheckingAccountValidator ..> CreditAccount
+SavingsAccountValidator ..> SavingsAccount
+CreditAccountValidator ..> CreditAccount
+
+' --- Layout Positioning (Invisible Grid) ---
+AccountStatus -[hidden]right- AccountType
+AccountType -[hidden]right- TransactionType
+
+Address -[hidden]down- Account
+Account -[hidden]down- AccountValidator
+AccountValidator -[hidden]down- Server
+
+@enduml
