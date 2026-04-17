@@ -1,3 +1,4 @@
+package bankapp;
 import java.util.Date;
 
 // this class is responsible for creating the log objects to be used by the logger.

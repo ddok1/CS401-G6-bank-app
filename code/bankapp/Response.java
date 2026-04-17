@@ -1,3 +1,4 @@
+package bankapp;
 import java.io.*;
 
 // this class is responsible for encapsulating data to send around in our 
