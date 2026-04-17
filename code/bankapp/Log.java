@@ -1,7 +1,7 @@
 package bankapp;
 import java.util.Date;
 
-// this class is responsible for creating the log objects to be used by the logger.
+// this class is responsible for creating immutable log objects to be used by the logger.
 // the toString returns a comma separated list of values that represent the log
 // we also support converting to/from file format so Logger doesn't need to know parsing details
 // and in order to simplify the Logger class a little more.
@@ -12,7 +12,7 @@ public class Log {
 	String comment;
 	double amount;
 	
-	enum TRANSACTION_TYPE {
+	public enum TRANSACTION_TYPE {
 		WITHDRAWAL,
 		DEPOSIT,
 		TRANSFER,
@@ -21,7 +21,7 @@ public class Log {
 	}
 	
 	// constructor used when creating a NEW log (uses current time)
-	Log(TRANSACTION_TYPE t, String c, double a) {
+	public Log(TRANSACTION_TYPE t, String c, double a) {
 		date = new Date();
 		type = t;
 		comment = c;
@@ -29,7 +29,7 @@ public class Log {
 	}
 
 	// constructor used when LOADING logs from file (uses stored timestamp)
-	Log(Date d, TRANSACTION_TYPE t, String c, double a) {
+	public Log(Date d, TRANSACTION_TYPE t, String c, double a) {
 		date = d;
 		type = t;
 		comment = c;
