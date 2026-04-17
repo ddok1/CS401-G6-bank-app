@@ -3,6 +3,8 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
+// THIS SERVER DOES NOT DO ANYTHING YET. NEED TO ADD ALL VALIDATION AND LOGIC FOR THAT
+
 public class Server {
 	static String ip;
 	Logger logger = Logger.getInstance();	// get our instance of logger so it is ready to use
