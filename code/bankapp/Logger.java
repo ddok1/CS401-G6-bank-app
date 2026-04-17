@@ -11,8 +11,8 @@ public class Logger {
 	// eager singleton instance (created once when class loads)
 	private static final Logger instance = new Logger();
 
-	ArrayList<Log> logs = new ArrayList<Log>();
-	String filename = "logs.txt";
+	private ArrayList<Log> logs = new ArrayList<Log>();
+	private String filename = "logs.txt";
 
 	// private constructor prevents external instantiation
 	// also loads logs immediately when the logger is created
@@ -25,8 +25,8 @@ public class Logger {
 		return instance;
 	}
 
-	ArrayList<Log> getLogs() {
-		return logs;
+	public synchronized ArrayList<Log> getLogs() {
+		return new ArrayList<Log>(logs); // return a copy of the list
 	}
 	
 	// loads logs from file into memory
@@ -65,13 +65,13 @@ public class Logger {
 		}
 	}
 	
-	void logEvent(Log event) {
+	public synchronized void logEvent(Log event) {
 		logs.add(event);
 	}
 	
 	// writes all logs to file
 	// NOTE: currently overwrites file each time to avoid duplicates
-	void saveLogs() {
+	public synchronized void saveLogs() {
 		try {
 			FileWriter writer = new FileWriter(filename); // overwrite each time
 

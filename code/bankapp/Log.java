@@ -7,10 +7,10 @@ import java.util.Date;
 // and in order to simplify the Logger class a little more.
 
 public class Log {
-	Date date;
-	TRANSACTION_TYPE type;
-	String comment;
-	double amount;
+	private final Date date;
+	private final TRANSACTION_TYPE type;
+	private final String comment;
+	private final double amount;
 	
 	public enum TRANSACTION_TYPE {
 		WITHDRAWAL,
