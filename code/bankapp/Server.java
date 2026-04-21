@@ -3,6 +3,8 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 
+import bankapp.Request.REQUEST_TYPE;
+
 // THIS SERVER DOES NOT DO ANYTHING YET. NEED TO ADD ALL VALIDATION AND LOGIC FOR THAT
 
 public class Server {
@@ -105,8 +107,46 @@ public class Server {
         }
 
         // placeholder for real server logic when we get to it -- this is where all the final validation will happen
-        private Response handleRequest(Object request) {
-            return new Response("request received", Response.RESPONSE_TYPE.INFO);
+        private Response handleRequest(Request request) {
+        	REQUEST_TYPE rtype = request.getType();
+        	Response dummy = new Response("test", Response.RESPONSE_TYPE.INFO);
+        	
+        	if (rtype == REQUEST_TYPE.DEPOSIT) {
+        		
+        		return dummy;
+        	}
+        	else if (rtype == REQUEST_TYPE.WITHDRAW) {
+        		
+        		return dummy;        		
+        	}
+        	else if (rtype == REQUEST_TYPE.OPEN_ACCOUNT) {
+        		
+        		return dummy;
+        	}
+        	else if (rtype == REQUEST_TYPE.CLOSE_ACCOUNT) {
+        		
+        		return dummy;
+        	}
+        	else if (rtype == REQUEST_TYPE.TRANSFER) {
+        		
+        		return dummy;
+        	}
+        	else if (rtype == REQUEST_TYPE.VIEW_ACCOUNT) {
+        		
+        		return dummy;
+        	}
+        	else if (rtype == REQUEST_TYPE.VIEW_LOGS) {
+        		
+        		return dummy;
+        	}
+        	else if (rtype == REQUEST_TYPE.OTHER) {
+        		
+        		return dummy;	
+        	}
+        	else 
+        		return new Response("Unknown Request, consider adding another RESPONSE_TYPE", Response.RESPONSE_TYPE.INFO);
+        	
+//            return new Response("request received", Response.RESPONSE_TYPE.INFO);
         }
     }
 	
