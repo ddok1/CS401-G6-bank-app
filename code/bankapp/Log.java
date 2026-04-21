@@ -60,7 +60,7 @@ public class Log {
 	}
 
 	// parses a line from the file and reconstructs a Log object
-	// this keeps parsing logic OUT of Logger which is cleaner design
+	// this keeps parsing logic out of Logger
 	public static Log fromFileString(String line) {
 		String[] parts = line.split("\\|"); // split on pipe character
 
