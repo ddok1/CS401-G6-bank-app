@@ -1,17 +1,18 @@
+package bankapp;
 import java.util.Date;
 
-// this class is responsible for creating the log objects to be used by the logger.
+// this class is responsible for creating immutable log objects to be used by the logger.
 // the toString returns a comma separated list of values that represent the log
 // we also support converting to/from file format so Logger doesn't need to know parsing details
 // and in order to simplify the Logger class a little more.
 
 public class Log {
-	Date date;
-	TRANSACTION_TYPE type;
-	String comment;
-	double amount;
+	private final Date date;
+	private final TRANSACTION_TYPE type;
+	private final String comment;
+	private final double amount;
 	
-	enum TRANSACTION_TYPE {
+	public enum TRANSACTION_TYPE {
 		WITHDRAWAL,
 		DEPOSIT,
 		TRANSFER,
@@ -20,7 +21,7 @@ public class Log {
 	}
 	
 	// constructor used when creating a NEW log (uses current time)
-	Log(TRANSACTION_TYPE t, String c, double a) {
+	public Log(TRANSACTION_TYPE t, String c, double a) {
 		date = new Date();
 		type = t;
 		comment = c;
@@ -28,7 +29,7 @@ public class Log {
 	}
 
 	// constructor used when LOADING logs from file (uses stored timestamp)
-	Log(Date d, TRANSACTION_TYPE t, String c, double a) {
+	public Log(Date d, TRANSACTION_TYPE t, String c, double a) {
 		date = d;
 		type = t;
 		comment = c;
@@ -59,7 +60,7 @@ public class Log {
 	}
 
 	// parses a line from the file and reconstructs a Log object
-	// this keeps parsing logic OUT of Logger which is cleaner design
+	// this keeps parsing logic out of Logger
 	public static Log fromFileString(String line) {
 		String[] parts = line.split("\\|"); // split on pipe character
 
@@ -68,15 +69,15 @@ public class Log {
 			throw new IllegalArgumentException("Malformed log line: " + line);
 		}
 
-		// convert string → correct types
-		long timestamp = Long.parseLong(parts[0]); // string → long
-		Date date = new Date(timestamp); // long → Date
+		// convert string --> correct types
+		long timestamp = Long.parseLong(parts[0]); // string --> long
+		Date date = new Date(timestamp); // long --> Date
 
-		TRANSACTION_TYPE type = TRANSACTION_TYPE.valueOf(parts[1]); // string → enum
+		TRANSACTION_TYPE type = TRANSACTION_TYPE.valueOf(parts[1]); // string --> enum
 
 		String comment = parts[2];
 
-		double amount = Double.parseDouble(parts[3]); // string → double
+		double amount = Double.parseDouble(parts[3]); // string --> double
 
 		return new Log(date, type, comment, amount);
 	}
