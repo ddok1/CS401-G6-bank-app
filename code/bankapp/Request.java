@@ -29,7 +29,8 @@ public class Request implements Serializable {
     public enum USER_TYPE {
         CUSTOMER,
         TELLER,
-        MANAGER
+        MANAGER,
+        ATM
     }
 
     public Request(REQUEST_TYPE t, USER_TYPE u, Person p, Account s, Account target, double a, String txt) {
@@ -70,4 +71,9 @@ public class Request implements Serializable {
         return text;
     }
     // no setters
+
+	public boolean isCustomerPresent() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
