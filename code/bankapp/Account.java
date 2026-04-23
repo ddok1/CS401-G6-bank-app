@@ -7,7 +7,8 @@ public class Account {
 		OPEN,
 		CLOSED,
 		SUSPENDED,
-		FLAGGED
+		FLAGGED,
+		FROZEN
 	}
 	public enum ACCOUNT_TYPE {
 		CHECKING,
@@ -20,6 +21,15 @@ public class Account {
 	private ACCOUNT_STATUS STATUS;
 	private ACCOUNT_TYPE TYPE;
 	private ArrayList<Person>authorizedUsers;
+	
+	// constructor
+	public Account(double balance, ACCOUNT_STATUS status, ACCOUNT_TYPE type, Person user) {
+		this.balance = balance;
+		STATUS = status;
+		TYPE = type;
+		// person array is an argument? or one person is entered into array at initialization?
+		// authorizedUsers[0] = user; //doesn't accept array 
+	}
 	
 	public void addAuthorizedUser(Customer user, Teller t) {
 		
@@ -41,18 +51,30 @@ public class Account {
 	}
 	
 	public boolean isFrozen() {
-		return false;
+		// true if account_status == frozen
+		if (STATUS == ACCOUNT_STATUS.FROZEN) {	
+			return true;
+			
+		} else {
+			// else, false
+			return false;
+		}	
 	}
 	
 	public void freeze() {
+		// turn account status to frozen
+		STATUS = ACCOUNT_STATUS.FROZEN;
 		
 	}
 	
 	public void unfreeze() {
+		// open account again
+		STATUS = ACCOUNT_STATUS.OPEN;
 		
 	}
 	
 	public void closeAccount() {
+		// close account status
 		STATUS = ACCOUNT_STATUS.CLOSED;
 	}
 	
@@ -67,6 +89,7 @@ public class Account {
 		return 0.0;
 	}
 	
+	// getters
 	public double getBalance() {
 		return balance;
 	}
@@ -87,6 +110,7 @@ public class Account {
 		return authorizedUsers;
 	}
 	
+	// setters
 	public void setBalance(double balance) {
 		this.balance = balance;
 	}
