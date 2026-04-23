@@ -17,26 +17,38 @@ public class Account {
 	}
 	
 	private double balance;
-	private Date lastUsed;
+	private Date lastUsed; // set to a new date whenever 
 	private ACCOUNT_STATUS STATUS;
 	private ACCOUNT_TYPE TYPE;
 	private ArrayList<Person>authorizedUsers;
+	
 	
 	// constructor
 	public Account(double balance, ACCOUNT_STATUS status, ACCOUNT_TYPE type, Person user) {
 		this.balance = balance;
 		STATUS = status;
 		TYPE = type;
-		// person array is an argument? or one person is entered into array at initialization?
-		// authorizedUsers[0] = user; //doesn't accept array 
+		// add user to array
+		authorizedUsers.add(user);
+		// update lastUsed
+		lastUsed = new Date();
+		
 	}
 	
 	public void addAuthorizedUser(Customer user, Teller t) {
+		// add user to authorizedUser list
+		
+		// update lastUsed
+		lastUsed = new Date();
 		
 	}
 	
 	public void removeAuthorizedUser(Customer user, Teller t) {
+		// remove user from authorizedUser list
+		// subtract count
 		
+		// update lastUsed
+		lastUsed = new Date();
 	}
 	
 	public boolean isSuspended() {
@@ -79,14 +91,22 @@ public class Account {
 	}
 	
 	public double withdraw(double amount) {
-		// get account type (checkings/savings)
-		// withdraw from account type
+		// update lastUsed
+		lastUsed = new Date();		
 		
-		return 0.0;
+		// subtract money from account 
+		balance -= amount;
+		
+		return balance;
 	}
 	
 	public double deposit(double amount) {
-		return 0.0;
+		// update lastUsed
+		lastUsed = new Date();	
+		
+		// add money to account
+		balance += amount;
+		return balance;
 	}
 	
 	// getters
