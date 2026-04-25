@@ -25,7 +25,7 @@ public class Response implements Serializable {
 	public RESPONSE_TYPE getType() {
 		return type;
 	}
-	public String getText() {
+	public String getMessage() {
 		return text;
 	}
 	// no setters
