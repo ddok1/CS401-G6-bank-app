@@ -132,7 +132,7 @@ public class ManagerGUI extends JFrame {
             return;
         }
 
-        String text = response.getText();
+        String text = response.getMessage();
         if (text == null || text.trim().isEmpty()) {
             text = "operation completed but response text was empty";
         }

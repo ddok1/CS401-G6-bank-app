@@ -20,11 +20,19 @@ public class Person implements Serializable{
 	}
 	
 	public String getName() {
-	    String fullName = ((firstName == null ? "" : firstName) + " " + (lastName == null ? "" : lastName)).trim();
-	    if (fullName.isBlank()) {
-	        throw new IllegalStateException("name is blank");
+	    String f = firstName == null ? "" : firstName.trim();
+	    String l = lastName == null ? "" : lastName.trim();
+
+	    // This is added so that we dont construct a name such as " " when an empty string is passed
+	    if (f.isEmpty() && l.isEmpty()) {
+	        return "";
+	    } else if (f.isEmpty()) {
+	        return l;
+	    } else if (l.isEmpty()) {
+	        return f;
+	    } else {
+	        return f + " " + l;
 	    }
-	    return fullName;
 	}
 	
 	public String getFirstName() {
