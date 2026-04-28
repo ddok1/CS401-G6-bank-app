@@ -354,6 +354,7 @@ class ClientHandler implements Runnable {
             account.deposit(req.getAmount());
             flagLargeTransaction(account, req.getAmount());
             account.setLastUsed(new Date());
+            server.saveAccounts();
         }
 
         return logAndRespond(
@@ -412,6 +413,7 @@ class ClientHandler implements Runnable {
             account.withdraw(req.getAmount());
             flagLargeTransaction(account, req.getAmount());
             account.setLastUsed(new Date());
+            server.saveAccounts();
         }
 
         return logAndRespond(
@@ -451,6 +453,7 @@ class ClientHandler implements Runnable {
             }
 
             accounts.add(account);
+            server.saveAccounts();
         }
 
         return logAndRespond(
@@ -503,6 +506,7 @@ class ClientHandler implements Runnable {
         // use synchronized so that remove happens safely on the shared list
         synchronized (accounts) {
             accounts.remove(account);
+            server.saveAccounts();
         }
 
         return logAndRespond(
@@ -582,6 +586,7 @@ class ClientHandler implements Runnable {
         ));
 
         logger.saveLogs();
+        server.saveAccounts();
 
         return new Response("Transfer successful", Response.RESPONSE_TYPE.SUCCESS);            
     }

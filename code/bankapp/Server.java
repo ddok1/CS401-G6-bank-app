@@ -17,7 +17,34 @@ public class Server {
 		server.start();
 	}
 	
+	private static final String ACCOUNTS_FILE = "accounts.dat"; // create a data file with the objects we want to store
+	private void loadAccounts() {
+	    File file = new File(ACCOUNTS_FILE);
+	    if (!file.exists()) {
+	        return;
+	    }
+
+	    try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(file))) {
+	        Object obj = in.readObject();
+	        if (obj instanceof List<?>) {
+	            accounts.clear();
+	            accounts.addAll((List<Account>) obj);
+	        }
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
+
+	public synchronized void saveAccounts() {
+	    try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(ACCOUNTS_FILE))) {
+	        out.writeObject(new ArrayList<>(accounts));
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
+	
     public void start() {
+    	loadAccounts();
         try {
             ServerSocket serverSocket = new ServerSocket(7890);
             serverSocket.setReuseAddress(true);
