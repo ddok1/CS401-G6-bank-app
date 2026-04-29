@@ -57,7 +57,7 @@ public class ATM {
 	                account,
 	                null,
 	                amount,
-	                "withdraw request"
+	                "withdraw request", serviceCompleted
 	        );
 
 	        out.writeObject(req);
@@ -81,7 +81,7 @@ public class ATM {
 	                account,
 	                null,
 	                0,
-	                "open account"
+	                "open account", serviceCompleted
 	        );
 
 	        out.writeObject(req);
@@ -105,7 +105,7 @@ public class ATM {
 	                account,
 	                null,
 	                amount,
-	                "deposit request"
+	                "deposit request", serviceCompleted
 	        );
 
 	        out.writeObject(req);
@@ -129,7 +129,7 @@ public class ATM {
 	                account,
 	                null,
 	                0,
-	                "view account"
+	                "view account", serviceCompleted
 	        );
 
 	        out.writeObject(req);
