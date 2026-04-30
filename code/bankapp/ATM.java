@@ -175,6 +175,31 @@ public class ATM {
 		
 	}
 	
+	// Transfer method
+	public Response transfer(double amount, Account source, Account target, Person person) {
+	    try {
+	        Request req = new Request(
+	                Request.REQUEST_TYPE.TRANSFER,
+	                Request.USER_TYPE.ATM,
+	                person,
+	                source,
+	                target,
+	                amount,
+	                "transfer request",
+	                serviceCompleted
+	        );
+
+	        out.writeObject(req);
+	        out.flush();
+
+	        return (Response) in.readObject();
+
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return new Response("ATM error", Response.RESPONSE_TYPE.ERROR);
+	    }
+	}
+	
 	// Cleanup method
 	public void close() {
 	    try {

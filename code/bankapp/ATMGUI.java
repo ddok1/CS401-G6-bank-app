@@ -15,6 +15,10 @@ public class ATMGUI {
 	private JTextField targetAccountField;
 	// added more variables
 	
+	// Placeholder Variables for testing
+	private Account currentAccount;
+	private Person currentPerson;
+	
 
 	// Creating main frame
 	public ATMGUI() {
@@ -46,14 +50,35 @@ public class ATMGUI {
 	
 	// Login Logic
 		loginButton.addActionListener(e -> {
-		    String account = accountField.getText();
-		    String pin = new String(pinField.getPassword());
-
+		   try {
+			int id = Integer.parseInt(accountField.getText());
+		    int pin = Integer.parseInt(new String(pinField.getPassword()));
+		    
+		    boolean success = atm.login(id, pin);
 		    // placeholder validation for now
-		    if (account.equals("123") && pin.equals("0000")) {
-		        cl.show(container, "ATM");
+		    if (success) {
+		    	    currentPerson = new Person(
+		    	        "John",
+		    	        "Doe",
+		    	        new Address()
+		    	    );
+
+		    	    currentAccount = new Account(
+		    	        0.0,
+		    	        Account.ACCOUNT_STATUS.OPEN,
+		    	        Account.ACCOUNT_TYPE.CHECKING,
+		    	        currentPerson,
+		    	        String.valueOf(id)
+		    	    );
+
+		    	    cl.show(container, "ATM");
+		    	
 		    } else {
 		        JOptionPane.showMessageDialog(frame, "Invalid login");
+		    }
+		    
+		   } catch (Exception ex) {
+		    	JOptionPane.showMessageDialog(frame, "Enter valid numerics: ");
 		    }
 		});
 	
@@ -87,6 +112,20 @@ public class ATMGUI {
 	JButton backBtn1 = new JButton("Back");
 	withdrawPanel.add(backBtn1);
 
+	// Withdraw logic
+	withdrawSubmit.addActionListener(e -> {
+	    try {
+	        double amount = Double.parseDouble(withdrawAmount.getText());
+
+	        Response res = atm.withdraw(amount, currentAccount, currentPerson);
+
+	        outputArea.append("[WITHDRAW] " + res.getMessage() + "\n");
+
+	    } catch (Exception ex) {
+	        outputArea.append("Invalid withdraw input\n");
+	    }
+	});
+	
 	backBtn1.addActionListener(e -> cl.show(container, "ATM"));
 
 	withdrawPanel.add(new JLabel("Enter amount:"));
@@ -102,6 +141,20 @@ public class ATMGUI {
 	depositPanel.add(backBtn2);
 	backBtn2.addActionListener(e -> cl.show(container, "ATM"));
 	
+	// Added logic for deposit
+	depositSubmit.addActionListener(e -> {
+	    try {
+	        double amount = Double.parseDouble(depositAmount.getText());
+
+	        Response res = atm.deposit(amount, currentAccount, currentPerson);
+
+	        outputArea.append("[DEPOSIT] " + res.getMessage() + "\n");
+
+	    } catch (Exception ex) {
+	        outputArea.append("Invalid deposit input\n");
+	    }
+	});
+	
 	depositPanel.add(new JLabel("Enter amount:"));
 	depositPanel.add(depositAmount);
 	depositPanel.add(depositSubmit);
@@ -114,6 +167,18 @@ public class ATMGUI {
 	balancePanel.add(backBtn3);
 	backBtn3.addActionListener(e -> cl.show(container, "ATM"));
 	
+	// Check Balance Logic
+	checkBalanceBtn.addActionListener(e -> {
+	    try {
+	        Response res = atm.checkBalance(currentAccount, currentPerson);
+
+	        outputArea.append("[BALANCE] " + res.getMessage() + "\n");
+
+	    } catch (Exception ex) {
+	        outputArea.append("Balance request failed\n");
+	    }
+	});
+	
 	balancePanel.add(checkBalanceBtn);
 	
 	//Transfer panel
@@ -125,6 +190,29 @@ public class ATMGUI {
 	JButton backBtn4 = new JButton("Back");
 	transferPanel.add(backBtn4);
 	backBtn4.addActionListener(e -> cl.show(container, "ATM"));
+	
+	//Transfer Logic
+	transferSubmit.addActionListener(e -> {
+	    try {
+	        double amount = Double.parseDouble(transferAmount.getText());
+	        String targetId = targetAccountField.getText();
+
+	        Account targetAccount = new Account(
+	                0.0,
+	                Account.ACCOUNT_STATUS.OPEN,
+	                Account.ACCOUNT_TYPE.CHECKING,
+	                currentPerson,
+	                targetId
+	        );
+
+	        Response res = atm.transfer(amount, currentAccount, targetAccount, currentPerson);
+
+	        outputArea.append("[TRANSFER] " + res.getMessage() + "\n");
+
+	    } catch (Exception ex) {
+	        outputArea.append("Invalid transfer input\n");
+	    }
+	});
 	
 	transferPanel.add(new JLabel("Target Account:"));
 	transferPanel.add(targetAccountField);
