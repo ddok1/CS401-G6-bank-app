@@ -15,6 +15,7 @@ public class Request implements Serializable {
     private final double amount;
     private final String text;
     private final boolean customerPresent;
+    private final String sessionId;
 
     public enum REQUEST_TYPE {
         WITHDRAW,
@@ -24,6 +25,11 @@ public class Request implements Serializable {
         VIEW_ACCOUNT,
         OPEN_ACCOUNT,
         CLOSE_ACCOUNT,
+        JOIN_TELLER_QUEUE,
+        CHECK_TELLER_QUEUE,
+        TELLER_READY,
+        TELLER_POLL_ASSIGNMENT,
+        END_TELLER_SESSION,
         OTHER
     }
 
@@ -34,7 +40,7 @@ public class Request implements Serializable {
         ATM
     }
 
-    public Request(REQUEST_TYPE t, USER_TYPE u, Person p, Account s, Account target, double a, String txt, boolean customerPresent) {
+    public Request(REQUEST_TYPE t, USER_TYPE u, Person p, Account s, Account target, double a, String txt, boolean customerPresent, String sessionID) {
         type = t;
         userType = u;
         person = p;
@@ -43,6 +49,7 @@ public class Request implements Serializable {
         amount = a;
         text = txt;
         this.customerPresent = customerPresent;
+        sessionId = sessionID;
     }
 
     public REQUEST_TYPE getType() {
@@ -77,4 +84,8 @@ public class Request implements Serializable {
 	public boolean isCustomerPresent() {
 		return customerPresent;
 	}
+	
+    public String getSessionId() {
+        return sessionId;
+    }
 }
