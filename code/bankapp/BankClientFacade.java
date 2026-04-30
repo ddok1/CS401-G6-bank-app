@@ -4,6 +4,7 @@ import java.io.EOFException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.UUID;
 
 public class BankClientFacade {
     private final String host;
@@ -38,21 +39,15 @@ public class BankClientFacade {
 
     public void close() {
         try {
-            if (in != null) {
-                in.close();
-            }
+            if (in != null) in.close();
         } catch (Exception ignored) { }
 
         try {
-            if (out != null) {
-                out.close();
-            }
+            if (out != null) out.close();
         } catch (Exception ignored) { }
 
         try {
-            if (socket != null && !socket.isClosed()) {
-                socket.close();
-            }
+            if (socket != null && !socket.isClosed()) socket.close();
         } catch (Exception ignored) { }
 
         in = null;
@@ -85,8 +80,7 @@ public class BankClientFacade {
             }
             if (!(response instanceof Response)) {
                 return new Response(
-                    "communication error: server returned unexpected object type "
-                        + response.getClass().getName(),
+                    "communication error: server returned unexpected object type " + response.getClass().getName(),
                     Response.RESPONSE_TYPE.ERROR
                 );
             }
@@ -104,6 +98,10 @@ public class BankClientFacade {
         }
     }
 
+    public String createSessionId() {
+        return UUID.randomUUID().toString();
+    }
+
     private boolean resolveCustomerPresent(Person person, Request.USER_TYPE userType) {
         if (userType == null) {
             throw new IllegalArgumentException("user type cannot be null");
@@ -117,9 +115,7 @@ public class BankClientFacade {
                 Teller teller = (Teller) person;
                 return teller.isCustomerPresent();
             } catch (ClassCastException e) {
-                throw new IllegalStateException(
-                    "person must be a Teller (or Manager) when user type is " + userType
-                );
+                throw new IllegalStateException("person must be a Teller (or Manager) when user type is " + userType);
             }
         }
 
@@ -127,37 +123,68 @@ public class BankClientFacade {
     }
 
     private Request buildRequest(
-        Request.REQUEST_TYPE requestType,
-        Person person,
-        Request.USER_TYPE userType,
-        Account sourceAccount,
-        Account targetAccount,
-        double amount,
-        String text
-    ) {
-        if (requestType == null) {
-            throw new IllegalArgumentException("request type cannot be null");
-        }
-        if (userType == null) {
-            throw new IllegalArgumentException("user type cannot be null");
-        }
-        if (person == null) {
-            throw new IllegalArgumentException("person cannot be null");
-        }
+    	    Request.REQUEST_TYPE requestType,
+    	    Person person,
+    	    Request.USER_TYPE userType,
+    	    Account sourceAccount,
+    	    Account targetAccount,
+    	    double amount,
+    	    String text,
+    	    String sessionId,
+    	    String username,
+    	    int pin
+    	) {
+    	    if (requestType == null) {
+    	        throw new IllegalArgumentException("request type cannot be null");
+    	    }
+    	    if (userType == null) {
+    	        throw new IllegalArgumentException("user type cannot be null");
+    	    }
+    	    if (person == null) {
+    	        throw new IllegalArgumentException("person cannot be null");
+    	    }
 
-        boolean customerPresent = resolveCustomerPresent(person, userType);
+    	    boolean customerPresent = resolveCustomerPresent(person, userType);
 
-        return new Request(
-            requestType,
-            userType,
-            person,
-            sourceAccount,
-            targetAccount,
-            amount,
-            text,
-            customerPresent
-        );
-    }
+    	    return new Request(
+    	        requestType,
+    	        userType,
+    	        person,
+    	        sourceAccount,
+    	        targetAccount,
+    	        amount,
+    	        text,
+    	        customerPresent,
+    	        sessionId,
+    	        username,
+    	        pin
+    	    );
+    	}
+    
+    private Request buildRequest(
+    	    Request.REQUEST_TYPE requestType,
+    	    Person person,
+    	    Request.USER_TYPE userType,
+    	    Account sourceAccount,
+    	    Account targetAccount,
+    	    double amount,
+    	    String text,
+    	    String sessionId
+    	) {
+    	    return buildRequest(requestType, person, userType, sourceAccount, targetAccount, amount, text, sessionId, null, 0);
+    	}
+
+    	private Request buildRequest(
+    	    Request.REQUEST_TYPE requestType,
+    	    Person person,
+    	    Request.USER_TYPE userType,
+    	    Account sourceAccount,
+    	    Account targetAccount,
+    	    double amount,
+    	    String text
+    	) {
+    	    return buildRequest(requestType, person, userType, sourceAccount, targetAccount, amount, text, null, null, 0);
+    	}
 
     public Response openAccount(Person person, Request.USER_TYPE userType, Account account) {
         try {
@@ -275,6 +302,140 @@ public class BankClientFacade {
             return send(request);
         } catch (Exception e) {
             return new Response("view logs failed: " + e.getMessage(), Response.RESPONSE_TYPE.ERROR);
+        }
+    }
+
+    public Response joinTellerQueue(Customer customer, Account account, String sessionId) {
+        try {
+            Request request = buildRequest(
+                Request.REQUEST_TYPE.JOIN_TELLER_QUEUE,
+                customer,
+                Request.USER_TYPE.CUSTOMER,
+                account,
+                null,
+                0.0,
+                "Join teller queue",
+                sessionId
+            );
+            return send(request);
+        } catch (Exception e) {
+            return new Response("join teller queue failed: " + e.getMessage(), Response.RESPONSE_TYPE.ERROR);
+        }
+    }
+
+    public Response checkTellerQueue(Customer customer, String sessionId) {
+        try {
+            Request request = buildRequest(
+                Request.REQUEST_TYPE.CHECK_TELLER_QUEUE,
+                customer,
+                Request.USER_TYPE.CUSTOMER,
+                null,
+                null,
+                0.0,
+                "Check teller queue",
+                sessionId
+            );
+            return send(request);
+        } catch (Exception e) {
+            return new Response("check teller queue failed: " + e.getMessage(), Response.RESPONSE_TYPE.ERROR);
+        }
+    }
+
+    public Response tellerReady(Teller teller) {
+        try {
+            Request request = buildRequest(
+                Request.REQUEST_TYPE.TELLER_READY,
+                teller,
+                Request.USER_TYPE.TELLER,
+                null,
+                null,
+                0.0,
+                "Teller ready"
+            );
+            return send(request);
+        } catch (Exception e) {
+            return new Response("teller ready failed: " + e.getMessage(), Response.RESPONSE_TYPE.ERROR);
+        }
+    }
+
+    public Response tellerPollAssignment(Teller teller) {
+        try {
+            Request request = buildRequest(
+                Request.REQUEST_TYPE.TELLER_POLL_ASSIGNMENT,
+                teller,
+                Request.USER_TYPE.TELLER,
+                null,
+                null,
+                0.0,
+                "Teller poll assignment"
+            );
+            return send(request);
+        } catch (Exception e) {
+            return new Response("teller assignment poll failed: " + e.getMessage(), Response.RESPONSE_TYPE.ERROR);
+        }
+    }
+
+    public Response endTellerSession(Teller teller, String sessionId) {
+        try {
+            Request request = buildRequest(
+                Request.REQUEST_TYPE.END_TELLER_SESSION,
+                teller,
+                Request.USER_TYPE.TELLER,
+                null,
+                null,
+                0.0,
+                "End teller session",
+                sessionId
+            );
+            return send(request);
+        } catch (Exception e) {
+            return new Response("end teller session failed: " + e.getMessage(), Response.RESPONSE_TYPE.ERROR);
+        }
+    }
+    
+    public Response authenticateCustomer(String username, int pin) {
+        try {
+            Customer probe = new Customer("", "", new Address(), username, pin);
+
+            Request request = buildRequest(
+                Request.REQUEST_TYPE.AUTHENTICATE_CUSTOMER,
+                probe,
+                Request.USER_TYPE.CUSTOMER,
+                null,
+                null,
+                0.0,
+                "Authenticate customer",
+                null,
+                username,
+                pin
+            );
+
+            return send(request);
+        } catch (Exception e) {
+            return new Response("customer authentication failed: " + e.getMessage(), Response.RESPONSE_TYPE.ERROR);
+        }
+    }
+
+    public Response findCustomer(String username) {
+        try {
+            Customer probe = new Customer("", "", new Address(), username, 0);
+
+            Request request = buildRequest(
+                Request.REQUEST_TYPE.FIND_CUSTOMER,
+                probe,
+                Request.USER_TYPE.TELLER,
+                null,
+                null,
+                0.0,
+                "Find customer",
+                null,
+                username,
+                0
+            );
+
+            return send(request);
+        } catch (Exception e) {
+            return new Response("find customer failed: " + e.getMessage(), Response.RESPONSE_TYPE.ERROR);
         }
     }
 }

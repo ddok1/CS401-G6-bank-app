@@ -25,7 +25,7 @@ public class ManagerGUI extends JFrame {
     private void buildUi() {
         setTitle("Manager Console - " + manager.getName());
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(650, 260);
+        setSize(720, 280);
         setLocationRelativeTo(null);
 
         JPanel root = new JPanel(new BorderLayout(10, 10));
@@ -53,21 +53,25 @@ public class ManagerGUI extends JFrame {
         JButton depositBtn = new JButton("Deposit");
         JButton withdrawBtn = new JButton("Withdraw");
         JButton logsBtn = new JButton("View Logs");
+        JButton quitBtn = new JButton("Quit");
 
         styleButton(balanceBtn);
         styleButton(depositBtn);
         styleButton(withdrawBtn);
         styleButton(logsBtn);
+        styleButton(quitBtn);
 
         balanceBtn.addActionListener(e -> checkBalance());
         depositBtn.addActionListener(e -> deposit());
         withdrawBtn.addActionListener(e -> withdraw());
         logsBtn.addActionListener(e -> viewLogs());
+        quitBtn.addActionListener(e -> dispose());
 
         buttonPanel.add(balanceBtn);
         buttonPanel.add(depositBtn);
         buttonPanel.add(withdrawBtn);
         buttonPanel.add(logsBtn);
+        buttonPanel.add(quitBtn);
 
         center.add(amountPanel);
         center.add(buttonPanel);
@@ -143,7 +147,6 @@ public class ManagerGUI extends JFrame {
                 : JOptionPane.INFORMATION_MESSAGE;
 
         JOptionPane.showMessageDialog(this, text, title, messageType);
-        JOptionPane.showMessageDialog(this, response.getMessage(), title, messageType);
     }
 
     private void showError(String msg) {

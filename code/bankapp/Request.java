@@ -1,11 +1,9 @@
 package bankapp;
-import java.io.*;
 
-// this class is responsible for encapsulating request data to send around in our
-// application. Each message is one time use and immutable, once used it will be discarded
+import java.io.Serializable;
+
 public class Request implements Serializable {
-
-    private static final long serialVersionUID = 1L; // eclipse said to do this, so i did. I dont think it matters for our project
+    private static final long serialVersionUID = 1L;
 
     private final REQUEST_TYPE type;
     private final USER_TYPE userType;
@@ -17,6 +15,9 @@ public class Request implements Serializable {
     private final boolean customerPresent;
     private final String sessionId;
 
+    private final String username;
+    private final int pin;
+
     public enum REQUEST_TYPE {
         WITHDRAW,
         DEPOSIT,
@@ -25,6 +26,8 @@ public class Request implements Serializable {
         VIEW_ACCOUNT,
         OPEN_ACCOUNT,
         CLOSE_ACCOUNT,
+        AUTHENTICATE_CUSTOMER,
+        FIND_CUSTOMER,
         JOIN_TELLER_QUEUE,
         CHECK_TELLER_QUEUE,
         TELLER_READY,
@@ -40,7 +43,19 @@ public class Request implements Serializable {
         ATM
     }
 
-    public Request(REQUEST_TYPE t, USER_TYPE u, Person p, Account s, Account target, double a, String txt, boolean customerPresent, String sessionID) {
+    public Request(
+        REQUEST_TYPE t,
+        USER_TYPE u,
+        Person p,
+        Account s,
+        Account target,
+        double a,
+        String txt,
+        boolean customerPresent,
+        String sessionID,
+        String username,
+        int pin
+    ) {
         type = t;
         userType = u;
         person = p;
@@ -50,6 +65,8 @@ public class Request implements Serializable {
         text = txt;
         this.customerPresent = customerPresent;
         sessionId = sessionID;
+        this.username = username;
+        this.pin = pin;
     }
 
     public REQUEST_TYPE getType() {
@@ -79,13 +96,20 @@ public class Request implements Serializable {
     public String getText() {
         return text;
     }
-    // no setters
 
-	public boolean isCustomerPresent() {
-		return customerPresent;
-	}
-	
+    public boolean isCustomerPresent() {
+        return customerPresent;
+    }
+
     public String getSessionId() {
         return sessionId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public int getPin() {
+        return pin;
     }
 }
