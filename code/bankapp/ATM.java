@@ -8,7 +8,7 @@ public class ATM {
 	// Conflicts with server
 	//(remove from UML)
 	// private double cash;
-	
+	 
 	private int failedAttempts;
 	private boolean serviceCompleted;
 	

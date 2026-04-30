@@ -3,7 +3,7 @@ package bankapp;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-
+ 
 public class ATMGUI {
 	private ATM atm;
 	
