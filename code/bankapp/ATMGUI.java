@@ -1,252 +1,271 @@
 package bankapp;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+
 import java.awt.*;
-import java.awt.event.*;
+import java.util.Objects;
 
-public class ATMGUI {
-	private ATM atm;
-	
-	private JFrame frame;
-	private JTextField amountField;
-	private JTextArea outputArea;
-	private JPasswordField pinField;
-	private JTextField accountField;
-	private JTextField targetAccountField;
-	// added more variables
-	
-	// Placeholder Variables for testing
-	private Account currentAccount;
-	private Person currentPerson;
-	
+public class ATMGUI extends JFrame {
+    private static final long serialVersionUID = 1L;
 
-	// Creating main frame
-	public ATMGUI() {
-	atm = new ATM("127.0.0.1");
-	frame = new JFrame("ATM Machine");
-	frame.setSize(400, 400);
-	frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-	CardLayout cl = new CardLayout();
-	JPanel container = new JPanel(cl);
-	frame.setContentPane(container);
+    private final ATM atm;
+    private Customer customer;
+    private Account account;
 
-	// Panel + GridLayout as auto rows
-	JPanel panel = new JPanel();
-	panel.setLayout(new GridLayout(0,1));
-	
-	// Input fields
-	// Login Panel
-	accountField = new JTextField();
-	pinField = new JPasswordField();
-	JButton loginButton = new JButton("Login");
-	
-	panel.add(new JLabel("Account ID:"));
-	panel.add(accountField);
-	
-	panel.add(new JLabel("Pin"));
-	panel.add(pinField);
-	
-	panel.add(loginButton);
-	
-	// Login Logic
-		loginButton.addActionListener(e -> {
-		   try {
-			int id = Integer.parseInt(accountField.getText());
-		    int pin = Integer.parseInt(new String(pinField.getPassword()));
-		    
-		    boolean success = atm.login(id, pin);
-		    // placeholder validation for now
-		    if (success) {
-		    	    currentPerson = new Person(
-		    	        "John",
-		    	        "Doe",
-		    	        new Address()
-		    	    );
+    private JTextField amountField;
 
-		    	    currentAccount = new Account(
-		    	        0.0,
-		    	        Account.ACCOUNT_STATUS.OPEN,
-		    	        Account.ACCOUNT_TYPE.CHECKING,
-		    	        currentPerson,
-		    	        String.valueOf(id)
-		    	    );
+    public ATMGUI(ATM atm) {
+        this.atm = Objects.requireNonNull(atm);
+        authenticateAndBuildUi();
+    }
 
-		    	    cl.show(container, "ATM");
-		    	
-		    } else {
-		        JOptionPane.showMessageDialog(frame, "Invalid login");
-		    }
-		    
-		   } catch (Exception ex) {
-		    	JOptionPane.showMessageDialog(frame, "Enter valid numerics: ");
-		    }
-		});
-	
-	// ATM Panel
-	JPanel atmPanel = new JPanel();
-	atmPanel.setLayout(new GridLayout(0,1));
-	
-	amountField = new JTextField();
-	
-	// Necessary Buttons
-	JButton withdrawButton = new JButton("Withdraw");
-	JButton depositButton = new JButton("Deposit");
-	JButton balanceButton = new JButton("Check Balance");
-	JButton transferButton = new JButton("Transfer");
-	
-	outputArea = new JTextArea();
-	outputArea.setEditable(false);
-	
-	// Panel
-	atmPanel.add(transferButton);
-	atmPanel.add(withdrawButton);
-	atmPanel.add(depositButton);
-	atmPanel.add(balanceButton);
-	
-	
-	//Withdraw panel
-	JPanel withdrawPanel = new JPanel(new GridLayout(0,1));
-	JTextField withdrawAmount = new JTextField();
-	JButton withdrawSubmit = new JButton("Submit");
-	//Back Button
-	JButton backBtn1 = new JButton("Back");
-	withdrawPanel.add(backBtn1);
+    public ATMGUI(ATM atm, Customer customer, Account account) {
+        this.atm = Objects.requireNonNull(atm);
+        this.customer = Objects.requireNonNull(customer);
+        this.account = Objects.requireNonNull(account);
 
-	// Withdraw logic
-	withdrawSubmit.addActionListener(e -> {
-	    try {
-	        double amount = Double.parseDouble(withdrawAmount.getText());
+        if (this.customer.getActiveChannel() == Customer.ACCESS_CHANNEL.NONE) {
+            this.customer.startAtmSession();
+        }
 
-	        Response res = atm.withdraw(amount, currentAccount, currentPerson);
+        buildUi();
+    }
 
-	        outputArea.append("[WITHDRAW] " + res.getMessage() + "\n");
+    private void authenticateAndBuildUi() {
+        String username = JOptionPane.showInputDialog(this, "Username:");
+        if (username == null || username.trim().isEmpty()) {
+            dispose();
+            return;
+        }
 
-	    } catch (Exception ex) {
-	        outputArea.append("Invalid withdraw input\n");
-	    }
-	});
-	
-	backBtn1.addActionListener(e -> cl.show(container, "ATM"));
+        String pinText = JOptionPane.showInputDialog(this, "PIN:");
+        if (pinText == null || pinText.trim().isEmpty()) {
+            dispose();
+            return;
+        }
 
-	withdrawPanel.add(new JLabel("Enter amount:"));
-	withdrawPanel.add(withdrawAmount);
-	withdrawPanel.add(withdrawSubmit);
-	
-	//Deposit panel
-	JPanel depositPanel = new JPanel(new GridLayout(0,1));
-	JTextField depositAmount = new JTextField();
-	JButton depositSubmit = new JButton("Submit");
-	//Back button
-	JButton backBtn2 = new JButton("Back");
-	depositPanel.add(backBtn2);
-	backBtn2.addActionListener(e -> cl.show(container, "ATM"));
-	
-	// Added logic for deposit
-	depositSubmit.addActionListener(e -> {
-	    try {
-	        double amount = Double.parseDouble(depositAmount.getText());
+        try {
+            int pin = Integer.parseInt(pinText.trim());
+            Response response = atm.login(username.trim(), pin);
 
-	        Response res = atm.deposit(amount, currentAccount, currentPerson);
+            if (response == null
+                || !response.isAuthenticated()
+                || response.getCustomer() == null
+                || response.getAccount() == null) {
 
-	        outputArea.append("[DEPOSIT] " + res.getMessage() + "\n");
+                JOptionPane.showMessageDialog(
+                    this,
+                    response != null ? response.getMessage() : "login failed",
+                    "ATM Login",
+                    JOptionPane.ERROR_MESSAGE
+                );
+                dispose();
+                return;
+            }
 
-	    } catch (Exception ex) {
-	        outputArea.append("Invalid deposit input\n");
-	    }
-	});
-	
-	depositPanel.add(new JLabel("Enter amount:"));
-	depositPanel.add(depositAmount);
-	depositPanel.add(depositSubmit);
-	
-	//Balance panel
-	JPanel balancePanel = new JPanel(new GridLayout(0,1));
-	JButton checkBalanceBtn = new JButton("Check Balance");
-	//Back Button
-	JButton backBtn3 = new JButton("Back");
-	balancePanel.add(backBtn3);
-	backBtn3.addActionListener(e -> cl.show(container, "ATM"));
-	
-	// Check Balance Logic
-	checkBalanceBtn.addActionListener(e -> {
-	    try {
-	        Response res = atm.checkBalance(currentAccount, currentPerson);
+            this.customer = response.getCustomer();
 
-	        outputArea.append("[BALANCE] " + res.getMessage() + "\n");
+            java.util.List<Account> accountList = response.getAccounts();
+            if (accountList != null && !accountList.isEmpty()) {
+                this.account = chooseAccount(accountList);
+                if (this.account == null) {
+                    dispose();
+                    return;
+                }
+            } else {
+                this.account = response.getAccount();
+            }
 
-	    } catch (Exception ex) {
-	        outputArea.append("Balance request failed\n");
-	    }
-	});
-	
-	balancePanel.add(checkBalanceBtn);
-	
-	//Transfer panel
-	JPanel transferPanel = new JPanel(new GridLayout(0,1));
-	JTextField transferAmount = new JTextField();
-	targetAccountField = new JTextField();
-	JButton transferSubmit = new JButton("Submit");
-	//Back Button
-	JButton backBtn4 = new JButton("Back");
-	transferPanel.add(backBtn4);
-	backBtn4.addActionListener(e -> cl.show(container, "ATM"));
-	
-	//Transfer Logic
-	transferSubmit.addActionListener(e -> {
-	    try {
-	        double amount = Double.parseDouble(transferAmount.getText());
-	        String targetId = targetAccountField.getText();
+            if (this.customer.getActiveChannel() == Customer.ACCESS_CHANNEL.NONE) {
+                this.customer.startAtmSession();
+            }
 
-	        Account targetAccount = new Account(
-	                0.0,
-	                Account.ACCOUNT_STATUS.OPEN,
-	                Account.ACCOUNT_TYPE.CHECKING,
-	                currentPerson,
-	                targetId
-	        );
+            buildUi();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, e.getMessage(), "ATM Login", JOptionPane.ERROR_MESSAGE);
+            dispose();
+        }
+    }
+    private Account chooseAccount(java.util.List<Account> accounts) {
+        if (accounts == null || accounts.isEmpty()) {
+            return null;
+        }
 
-	        Response res = atm.transfer(amount, currentAccount, targetAccount, currentPerson);
+        String[] options = new String[accounts.size()];
+        for (int i = 0; i < accounts.size(); i++) {
+            Account a = accounts.get(i);
+            options[i] = a.getTYPE() + " | #" + a.getAccountNumber() + " | Balance: " + a.getBalance();
+        }
 
-	        outputArea.append("[TRANSFER] " + res.getMessage() + "\n");
+        int selected = JOptionPane.showOptionDialog(
+            this,
+            "Choose an account:",
+            "Select Account",
+            JOptionPane.DEFAULT_OPTION,
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            options,
+            options[0]
+        );
 
-	    } catch (Exception ex) {
-	        outputArea.append("Invalid transfer input\n");
-	    }
-	});
-	
-	transferPanel.add(new JLabel("Target Account:"));
-	transferPanel.add(targetAccountField);
-	transferPanel.add(new JLabel("Amount:"));
-	transferPanel.add(transferAmount);
-	transferPanel.add(transferSubmit);
-	
-	
-	atmPanel.add(new JScrollPane(outputArea));
-	
-	// Adding Frame
-	container.add(panel, "LOGIN");
-	container.add(atmPanel, "ATM");
-	container.add(withdrawPanel, "WITHDRAW");
-	container.add(depositPanel, "DEPOSIT");
-	container.add(balancePanel, "BALANCE");
-	container.add(transferPanel, "TRANSFER");
-	
-	// Action Listeners
-	withdrawButton.addActionListener(e -> cl.show(container, "WITHDRAW"));
-	depositButton.addActionListener(e -> cl.show(container, "DEPOSIT"));
-	balanceButton.addActionListener(e -> cl.show(container, "BALANCE"));
-	transferButton.addActionListener(e -> cl.show(container, "TRANSFER"));
-	
-	//Back Button Logic
-	JButton backBtn = new JButton("Back");
-	panel.add(backBtn);
-	backBtn.addActionListener(e -> cl.show(container, "ATM"));
-	
-	frame.setVisible(true);
-	} 
+        if (selected < 0) {
+            return null;
+        }
 
-public static void main(String[] args) {
-	new ATMGUI();
+        return accounts.get(selected);
+    }
+
+    private void buildUi() {
+        setTitle("ATM - " + customer.getName());
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setSize(640, 260);
+        setLocationRelativeTo(null);
+
+        JPanel root = new JPanel(new BorderLayout(10, 10));
+        root.setBorder(new EmptyBorder(15, 15, 15, 15));
+
+        JLabel header = new JLabel(
+            "Customer: " + customer.getName() + " | Connected to " + atm.getConnectedServerIP()
+        );
+        header.setFont(new Font("SansSerif", Font.BOLD, 20));
+        root.add(header, BorderLayout.NORTH);
+
+        JPanel center = new JPanel();
+        center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
+
+        JPanel amountPanel = new JPanel(new BorderLayout(10, 10));
+        JLabel label = new JLabel("Amount:");
+        label.setFont(new Font("SansSerif", Font.PLAIN, 18));
+
+        amountField = new JTextField();
+        amountField.setFont(new Font("SansSerif", Font.PLAIN, 18));
+
+        amountPanel.add(label, BorderLayout.WEST);
+        amountPanel.add(amountField, BorderLayout.CENTER);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        JButton balanceBtn = new JButton("Check Balance");
+        JButton depositBtn = new JButton("Deposit");
+        JButton withdrawBtn = new JButton("Withdraw");
+        JButton quitBtn = new JButton("Quit");
+
+        styleButton(balanceBtn);
+        styleButton(depositBtn);
+        styleButton(withdrawBtn);
+        styleButton(quitBtn);
+
+        balanceBtn.addActionListener(e -> checkBalance());
+        depositBtn.addActionListener(e -> deposit());
+        withdrawBtn.addActionListener(e -> withdraw());
+        quitBtn.addActionListener(e -> quit());
+
+        buttonPanel.add(balanceBtn);
+        buttonPanel.add(depositBtn);
+        buttonPanel.add(withdrawBtn);
+        buttonPanel.add(quitBtn);
+
+        center.add(amountPanel);
+        center.add(buttonPanel);
+
+        root.add(center, BorderLayout.CENTER);
+        setContentPane(root);
+    }
+
+    private void checkBalance() {
+        Response response = atm.checkBalance(account, customer);
+        showResponse(response, "Balance");
+    }
+
+    private void deposit() {
+        try {
+            double amount = parseAmount();
+
+            if (amount > atm.getDailyDepositLimit()) {
+                throw new IllegalArgumentException(
+                    "amount exceeds ATM deposit limit of " + atm.getDailyDepositLimit()
+                );
+            }
+
+            Response response = atm.deposit(amount, account, customer);
+            showResponse(response, "Deposit");
+            amountField.setText("");
+        } catch (Exception ex) {
+            showError(ex.getMessage());
+        }
+    }
+
+    private void withdraw() {
+        try {
+            double amount = parseAmount();
+
+            if (amount > atm.getDailyWithdrawalLimit()) {
+                throw new IllegalArgumentException(
+                    "amount exceeds ATM withdrawal limit of " + atm.getDailyWithdrawalLimit()
+                );
+            }
+
+            Response response = atm.withdraw(amount, account, customer);
+            showResponse(response, "Withdraw");
+            amountField.setText("");
+        } catch (Exception ex) {
+            showError(ex.getMessage());
+        }
+    }
+
+    private void quit() {
+        try {
+            if (customer != null && customer.getActiveChannel() != Customer.ACCESS_CHANNEL.NONE) {
+                customer.endSession();
+            }
+        } catch (Exception ignored) { }
+
+        atm.close();
+        dispose();
+    }
+
+    private double parseAmount() {
+        String text = amountField.getText();
+        if (text == null || text.trim().isEmpty()) {
+            throw new IllegalArgumentException("enter an amount");
+        }
+
+        try {
+            double amount = Double.parseDouble(text.trim());
+            if (amount <= 0) {
+                throw new IllegalArgumentException("amount must be greater than 0");
+            }
+            return amount;
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("amount must be a valid number");
+        }
+    }
+
+    private void showResponse(Response response, String title) {
+        if (response == null) {
+            showError("operation failed: response was null");
+            return;
+        }
+
+        String text = response.getMessage();
+        if (text == null || text.trim().isEmpty()) {
+            text = "operation completed but response text was empty";
+        }
+
+        int messageType =
+            response.getType() == Response.RESPONSE_TYPE.ERROR
+                ? JOptionPane.ERROR_MESSAGE
+                : JOptionPane.INFORMATION_MESSAGE;
+
+        JOptionPane.showMessageDialog(this, text, title, messageType);
+    }
+
+    private void showError(String msg) {
+        JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private void styleButton(JButton b) {
+        b.setFont(new Font("SansSerif", Font.BOLD, 16));
+        b.setPreferredSize(new Dimension(150, 40));
+    }
 }
-}
-

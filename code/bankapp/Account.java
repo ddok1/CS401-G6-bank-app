@@ -177,4 +177,16 @@ public class Account implements Serializable {
 	public void flag() {
 		// logic for flagging the account here
 	}
+	// overrides so we can use comparisons properly
+	@Override
+	public boolean equals(Object o) {
+	    if (this == o) return true;
+	    if (!(o instanceof Account other)) return false;
+	    return Objects.equals(accountNumber, other.accountNumber);
+	}
+
+	@Override
+	public int hashCode() {
+	    return Objects.hash(accountNumber);
+	}
 }
