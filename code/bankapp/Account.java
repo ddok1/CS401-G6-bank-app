@@ -23,8 +23,6 @@ public class Account implements Serializable {
 	private ACCOUNT_TYPE TYPE;
 	private ArrayList<Person> authorizedUsers = new ArrayList<Person>();
 	private String accountNumber;
-	private int pin;
-	static private int count = 999;
 	
 	
 	// constructor
@@ -41,7 +39,7 @@ public class Account implements Serializable {
 		authorizedUsers.add(user);
 		// update lastUsed
 		lastUsed = new Date();
-		pin = count++;
+
 		
 	}
 	
@@ -115,9 +113,10 @@ public class Account implements Serializable {
 		
 		// subtract money 
 		BigDecimal resultBD = balanceBD.subtract(amountBD);
-		double result = resultBD.doubleValue(); // convert to double again
+		double newBalance = resultBD.doubleValue(); // convert to double again
 		
-		return result;
+		setBalance(newBalance); // makes sure balance is changed
+		return newBalance;
 	}
 	
 	public double deposit(double amount) {
@@ -128,9 +127,10 @@ public class Account implements Serializable {
 		
 		// subtract money 
 		BigDecimal resultBD = balanceBD.add(amountBD);
-		double result = resultBD.doubleValue(); // convert to double again
+		double newBalance = resultBD.doubleValue(); // convert to double again
 		
-		return result;
+		setBalance(newBalance);	// makes sure balance is changed
+		return newBalance;
 	}
 	
 	// getters
@@ -166,9 +166,7 @@ public class Account implements Serializable {
 		return owner + "|" + accountNumber;
 	}
 	
-	public int getPin() {
-		return pin;
-	}
+
 	
 	// setters
 	public void setBalance(double balance) {
