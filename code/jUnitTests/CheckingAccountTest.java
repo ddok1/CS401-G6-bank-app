@@ -20,7 +20,7 @@ class CheckingAccountTest {
 	Account.ACCOUNT_STATUS status = Account.ACCOUNT_STATUS.OPEN; // status
 	Account.ACCOUNT_TYPE typeChecking = Account.ACCOUNT_TYPE.CHECKING; //type
 	Account.ACCOUNT_TYPE typeSavings = Account.ACCOUNT_TYPE.SAVINGS; //type
-	Customer user = new Customer(); //user
+	Person user = new Person(); //user
 
 	@Test
 	void testTransferCheckingToSaving() {

@@ -25,7 +25,7 @@ class AccountTest {
 		assertEquals(status, acc.getSTATUS());
 		assertEquals(type, acc.getTYPE());
 		assertNotNull(acc.getAccountNumber());
-		assertTrue(acc.getPin() >= 1000);
+
 		assertNotNull(acc.getLastUsed());
 		
 		
@@ -114,13 +114,7 @@ class AccountTest {
 	}
 
 	
-	@Test
-	void testDifferentPins() {
-		Account acc1 = new Account(balance, status, type, user);
-		Account acc2 = new Account(balance, status, type, user);
-		
-		assertNotEquals(acc1.getPin(), acc2.getPin());
-	}
+
 
 
 }

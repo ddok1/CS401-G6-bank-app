@@ -23,15 +23,14 @@ public class Account implements Serializable {
 	private ACCOUNT_TYPE TYPE;
 	private ArrayList<Person> authorizedUsers = new ArrayList<Person>();
 	private String accountNumber;
-	private int pin;
 	
 	
 	// constructor
-	public Account(double balance, ACCOUNT_STATUS status, ACCOUNT_TYPE type, Customer user) {
+	public Account(double balance, ACCOUNT_STATUS status, ACCOUNT_TYPE type, Person user) {
 		this(balance, status, type, user, UUID.randomUUID().toString());
 	}
 
-	public Account(double balance, ACCOUNT_STATUS status, ACCOUNT_TYPE type, Customer user, String accountNumber) {
+	public Account(double balance, ACCOUNT_STATUS status, ACCOUNT_TYPE type, Person user, String accountNumber) {
 		this.balance = balance;
 		STATUS = status;
 		TYPE = type;
@@ -40,7 +39,7 @@ public class Account implements Serializable {
 		authorizedUsers.add(user);
 		// update lastUsed
 		lastUsed = new Date();
-		pin = user.getPin();
+
 		
 	}
 	
@@ -167,9 +166,7 @@ public class Account implements Serializable {
 		return owner + "|" + accountNumber;
 	}
 	
-	public int getPin() {
-		return pin;
-	}
+
 	
 	// setters
 	public void setBalance(double balance) {

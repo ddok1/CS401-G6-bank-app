@@ -20,7 +20,7 @@ class SavingsAccountTest {
 	Account.ACCOUNT_STATUS status = Account.ACCOUNT_STATUS.OPEN; // status
 	Account.ACCOUNT_TYPE typeChecking = Account.ACCOUNT_TYPE.CHECKING; //type
 	Account.ACCOUNT_TYPE typeSavings = Account.ACCOUNT_TYPE.SAVINGS; //type
-	Customer user = new Customer(); //user
+	Person user = new Person(); //user
 	
 	@Test
 	void testTransferSavingsToChecking() {
@@ -29,8 +29,8 @@ class SavingsAccountTest {
 		
 		accSavings.transferSavingsToChecking(accChecking, 5.01);
 		
-		assertEquals(105.51, accChecking.getBalance());
-		assertEquals(195.00, accSavings.getBalance());
+		assertEquals(105.51, accChecking.getBalance()); // 100.50 + 5.01 = 105.51
+		assertEquals(195.00, accSavings.getBalance()); // 200.01 - 5.01 = 195
 	}
 
 }
