@@ -148,8 +148,6 @@ public class ATMGUI extends JFrame {
                     }
                     updateHeader();
                     showATM();
-                    updateHeader();
-                    showATM();
                 } else {
                     JOptionPane.showMessageDialog(this, "Invalid login");
                 }
@@ -221,7 +219,7 @@ public class ATMGUI extends JFrame {
     }
 
     private void checkBalance() {
-        Response response = atm.checkBalance(account, customer);
+        Response response = atm.checkBalance(customer);
         showResponse(response, "Balance");
     }
 
@@ -235,7 +233,7 @@ public class ATMGUI extends JFrame {
                 );
             }
 
-            Response response = atm.deposit(amount, account, customer);
+            Response response = atm.deposit(amount, customer);
             showResponse(response, "Deposit");
             amountField.setText("");
         } catch (Exception ex) {
@@ -253,7 +251,7 @@ public class ATMGUI extends JFrame {
                 );
             }
 
-            Response response = atm.withdraw(amount, account, customer);
+            Response response = atm.withdraw(amount, customer);
             showResponse(response, "Withdraw");
             amountField.setText("");
         } catch (Exception ex) {

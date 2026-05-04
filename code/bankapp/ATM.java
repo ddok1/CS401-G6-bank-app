@@ -6,6 +6,9 @@ public class ATM {
 
     private final String serverIP;
     private final BankClientFacade client;
+    // For Login purposes
+    private Customer loggedInCustomer;
+    private Account activeAccount;
 
     private double dailyWithdrawalLimit = 10000;
     private double dailyDepositLimit = 10000;
@@ -29,20 +32,28 @@ public class ATM {
         return client.transfer(person, Request.USER_TYPE.ATM, source, null, amount);
     }
 
-    public Response withdraw(double amount, Account account, Person person) {
-        return client.withdraw(person, Request.USER_TYPE.ATM, account, amount);
+    public Response withdraw(double amount, Person person) {
+        return client.withdraw(loggedInCustomer,
+            Request.USER_TYPE.CUSTOMER,
+            activeAccount,
+            amount);
     }
 
     public Response openAccount(Account account, Person person) {
         return client.openAccount(person, Request.USER_TYPE.ATM, account);
     }
 
-    public Response deposit(double amount, Account account, Person person) {
-        return client.deposit(person, Request.USER_TYPE.ATM, account, amount);
+    public Response deposit(double amount, Person person) {
+        return client.deposit(loggedInCustomer,
+            Request.USER_TYPE.CUSTOMER,
+            activeAccount,
+            amount);
     }
 
-    public Response checkBalance(Account account, Person person) {
-        return client.viewAccount(person, Request.USER_TYPE.ATM, account);
+    public Response checkBalance(Person person) {
+        return client.viewAccount(loggedInCustomer,
+            Request.USER_TYPE.CUSTOMER,
+            activeAccount);
     }
 
     public void displayConfirmation() {
@@ -62,19 +73,16 @@ public class ATM {
 
         if (response == null || !response.isAuthenticated()) {
             failedAttempts++;
-
-            if (failedAttempts >= 5) {
-                serviceCompleted = true;
-            }
-
+            if (failedAttempts >= 5) serviceCompleted = true;
             displayError();
-            if (response == null) {
-                return new Response("ATM login failed", Response.RESPONSE_TYPE.ERROR);
-            }
             return response;
         }
 
         failedAttempts = 0;
+        
+        this.loggedInCustomer = response.getCustomer();
+        this.activeAccount = response.getAccount();
+
         return response;
     }
 
