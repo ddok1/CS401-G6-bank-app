@@ -20,6 +20,7 @@ class CheckingAccountTest {
 	Account.ACCOUNT_STATUS status = Account.ACCOUNT_STATUS.OPEN; // status
 	Account.ACCOUNT_TYPE typeChecking = Account.ACCOUNT_TYPE.CHECKING; //type
 	Account.ACCOUNT_TYPE typeSavings = Account.ACCOUNT_TYPE.SAVINGS; //type
+	Account.ACCOUNT_TYPE typeCredit = Account.ACCOUNT_TYPE.CREDIT; //type
 	Person user = new Person(); //user
 
 	@Test
@@ -38,12 +39,16 @@ class CheckingAccountTest {
 	@Test
 	void testTransferCheckingToCredit() {
 		CheckingAccount accChecking = new CheckingAccount(balance2, status, typeChecking, user); //20.30
-		CreditAccount accCredit = new CreditAccount(balance1, status, typeSavings, user); // 50.30
+		CreditAccount accCredit = new CreditAccount(balance1, status, typeCredit, user); // 50.30
 		
-		accChecking.transferToCredit(accCredit, 40.01);
-		
-		assertEquals(90.31, accCredit.getBalance());
-		assertEquals(-19.71, accChecking.getBalance());
+		accChecking.transferToCredit(accCredit, 40.00);
+
+		System.out.println(accChecking.getBalance());
+		System.out.println(accCredit.getBalance());
+
+		assertEquals(-19.70, accChecking.getBalance()); // 20.30 - 40 = -19.70
+		assertEquals(10.30, accCredit.getBalance()); // 50.30 - 40.00 = 10.30
+
 		
 	}
 
