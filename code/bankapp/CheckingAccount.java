@@ -30,8 +30,8 @@ public class CheckingAccount extends Account {
 	}
 	
 	public double transferToCredit(CreditAccount account, double amount) {
-		// add amount to credit
-		account.deposit(amount);
+		// add amount to credit (reduce credit balance)
+		account.withdraw(amount);
 		
 		//subtract from checking
 		withdraw(amount);
