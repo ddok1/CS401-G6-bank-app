@@ -163,7 +163,7 @@ public class ATMJTest {
 	        user
 	    );
 
-	    // ✅ FIX: create a target account
+	    // Creates a target account
 	    Account target = new Account(
 	        0,
 	        Account.ACCOUNT_STATUS.OPEN,
@@ -197,6 +197,43 @@ public class ATMJTest {
 	        atm.withdraw(200, acc, user);
 	        atm.checkBalance(acc, user);
 	    });
+	}
+	//Insufficient Funds
+	@Test
+	public void testWithdrawInsufficientFunds() {
+	    ATM atm = new ATM("localhost");
+
+	    Customer user = new Customer("", "", new Address(), "user", 1234);
+
+	    Account acc = new Account(
+	        50,
+	        Account.ACCOUNT_STATUS.OPEN,
+	        Account.ACCOUNT_TYPE.CHECKING,
+	        user
+	    );
+
+	    Response response = atm.withdraw(200, acc, user);
+
+	    assertNotNull(response);
+	    assertEquals(Response.RESPONSE_TYPE.ERROR, response.getType());
+	}
+	@Test
+	public void testFrozenAccountPreventsWithdrawal() {
+	    ATM atm = new ATM("localhost");
+
+	    Customer user = new Customer("", "", new Address(), "user", 1234);
+
+	    Account acc = new Account(
+	        500,
+	        Account.ACCOUNT_STATUS.FROZEN,
+	        Account.ACCOUNT_TYPE.CHECKING,
+	        user
+	    );
+
+	    Response response = atm.withdraw(100, acc, user);
+
+	    assertNotNull(response);
+	    assertEquals(Response.RESPONSE_TYPE.ERROR, response.getType());
 	}
 	
 
