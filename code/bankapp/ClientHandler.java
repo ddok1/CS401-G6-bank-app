@@ -693,8 +693,20 @@ class ClientHandler implements Runnable {
         Response accessError = validateAccess(req);
         if (accessError != null) return accessError;
 
-        Account source = req.getSourceAccount();
-        Account target = req.getTargetAccount();
+        Account source;
+        Account target;
+
+        synchronized (accounts) {
+            int sIdx = accounts.indexOf(req.getSourceAccount());
+            int tIdx = accounts.indexOf(req.getTargetAccount());
+
+            if (sIdx < 0 || tIdx < 0) {
+                return accountNotFoundError;
+            }
+
+            source = accounts.get(sIdx);
+            target = accounts.get(tIdx);
+        }
 
         if (source == target) {
             return sameAccountTransferError;

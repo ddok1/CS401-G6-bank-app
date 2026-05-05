@@ -177,6 +177,27 @@ public class ATMGUI extends JFrame {
         	showLogin();
         }
     }
+    private void refreshAccounts() {
+        try {
+            Response res = atm.login(customer.getUsername(), 0); 
+            // OR better: you should have a "get accounts" endpoint
+
+            if (res != null && res.getAccounts() != null) {
+                accounts = res.getAccounts();
+            }
+
+            // re-pick current account from refreshed list
+            for (Account a : accounts) {
+                if (a.equals(account)) {
+                    account = a;
+                    break;
+                }
+            }
+
+        } catch (Exception e) {
+            showError("Failed to refresh accounts: " + e.getMessage());
+        }
+    }
     
     // Transfer Method
     private void transfer() {
@@ -202,13 +223,14 @@ public class ATMGUI extends JFrame {
             );
 
             showResponse(response, "Transfer");
-
+            refreshAccounts();
             amountField.setText("");
 
         } catch (Exception ex) {
             showError(ex.getMessage());
         }
     }
+    
     
     private void updateHeader() {
         if (customer != null) {
