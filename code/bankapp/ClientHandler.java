@@ -802,6 +802,24 @@ class ClientHandler implements Runnable {
     }
 
     private Response handleOther(Request req) {
+        if (req == null) {
+            return nullRequestError;
+        }
+
+        String message = req.getText();
+
+        // if this is an ATM log attempt, handle it
+        if (message != null && !message.trim().isEmpty()) {
+            logger.logEvent(new Log(
+                Log.TRANSACTION_TYPE.OTHER,
+                message,
+                0.0,
+                "ATM"
+            ));
+            logger.saveLogs();
+
+            return new Response("ATM log recorded", Response.RESPONSE_TYPE.SUCCESS);
+        }
         return new Response("No handler implemented for OTHER request type", Response.RESPONSE_TYPE.INFO);
     }
 }
