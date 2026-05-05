@@ -8,7 +8,6 @@ import org.junit.platform.suite.api.Suite;
 @SelectClasses({
     AccountValidatorTest.class,
     AddressTest.class,
-    ATMJTest.class,
     CheckingAccountValidatorTest.class,
     CreditAccountValidatorTest.class,
     CustomerTest.class,

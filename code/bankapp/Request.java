@@ -43,6 +43,11 @@ public class Request implements Serializable {
         END_TELLER_SESSION,
         GET_ALL_ACCOUNTS,
         CREATE_CUSTOMER_AND_ACCOUNT,
+        FREEZE_ACCOUNT,
+        UNFREEZE_ACCOUNT,
+        START_CUSTOMER_SESSION,
+        TOUCH_CUSTOMER_SESSION,
+        END_CUSTOMER_SESSION,
         OTHER
     }
 

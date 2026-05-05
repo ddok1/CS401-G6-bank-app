@@ -20,13 +20,21 @@ public class ATM {
         this.failedAttempts = 0;
         this.serviceCompleted = false;
     }
+    
+    public BankClientFacade getClient() {
+        return client;
+    }
  
     public String getConnectedServerIP() {
         return serverIP;
     }
     
-    public Response transfer(double amount, Account source, String targetAccountNumber, Person person) {
-        return client.transfer(person, Request.USER_TYPE.ATM, source, null, amount);
+    public Response transfer(double amount, Account source, Account target, Person person) {
+        return client.transfer(person, Request.USER_TYPE.ATM, source, target, amount);
+    }
+    
+    public Response viewAccount(Account account, Customer customer) {
+        return client.viewAccount(customer, Request.USER_TYPE.ATM, account);
     }
 
     public Response withdraw(double amount, Account account, Person person) {
@@ -62,6 +70,13 @@ public class ATM {
 
         if (response == null || !response.isAuthenticated()) {
             failedAttempts++;
+            
+            logAttempt(new Log(
+            	    Log.TRANSACTION_TYPE.ERROR,
+            	    "Failed ATM login attempt for username: " + username,
+            	    0.0,
+            	    "ATM"
+            	));
 
             if (failedAttempts >= 5) {
                 serviceCompleted = true;
@@ -83,7 +98,23 @@ public class ATM {
     }
 
     public void logAttempt(Log log) {
-        // optional local ATM logging hook
+        if (log == null) return;
+
+
+        Response response = client.send(Request.transaction(
+            Request.REQUEST_TYPE.OTHER,
+            Request.USER_TYPE.ATM,
+            null,
+            null,
+            null,
+            0.0,
+            log.toString(),
+            null
+        ));
+        
+        if (response == null || response.getType() == Response.RESPONSE_TYPE.ERROR) {
+            displayError();
+        }
     }
 
     public double getDailyWithdrawalLimit() {

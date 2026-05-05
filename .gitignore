@@ -3,4 +3,18 @@ bin/
 *.class
 logs.txt
 .DS_Store
+
+
+# runtime / local files
 accounts.dat
+
+# temp/lock files
+*.lock
+.~lock.*
+
+# local test drivers
+ATMFlowDriver.java
+TellerGUITestDriver.java
+
+accounts.dat
+

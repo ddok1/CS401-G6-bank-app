@@ -561,4 +561,66 @@ public class BankClientFacade {
                     Response.RESPONSE_TYPE.ERROR);
         }
     }
+    
+    public Response freezeAccount(Person person, Request.USER_TYPE userType, Account account) {
+        return send(buildRequest(Request.REQUEST_TYPE.FREEZE_ACCOUNT, person, userType, account, null, 0.0, "Freeze account request"));
+    }
+
+    public Response unfreezeAccount(Person person, Request.USER_TYPE userType, Account account) {
+        return send(buildRequest(Request.REQUEST_TYPE.UNFREEZE_ACCOUNT, person, userType, account, null, 0.0, "Unfreeze account request"));
+    }
+    
+    public Response startCustomerSession(Customer customer, Account account, String sessionId) {
+        try {
+            Request request = buildRequest(
+                Request.REQUEST_TYPE.START_CUSTOMER_SESSION,
+                customer,
+                Request.USER_TYPE.CUSTOMER,
+                account,
+                null,
+                0.0,
+                "Start customer session",
+                sessionId
+            );
+            return send(request);
+        } catch (Exception e) {
+            return new Response("start session failed: " + e.getMessage(), Response.RESPONSE_TYPE.ERROR);
+        }
+    }
+
+    public Response touchCustomerSession(Customer customer, String sessionId) {
+        try {
+            Request request = buildRequest(
+                Request.REQUEST_TYPE.TOUCH_CUSTOMER_SESSION,
+                customer,
+                Request.USER_TYPE.CUSTOMER,
+                null,
+                null,
+                0.0,
+                "Touch customer session",
+                sessionId
+            );
+            return send(request);
+        } catch (Exception e) {
+            return new Response("touch session failed: " + e.getMessage(), Response.RESPONSE_TYPE.ERROR);
+        }
+    }
+
+    public Response endCustomerSession(Customer customer, String sessionId) {
+        try {
+            Request request = buildRequest(
+                Request.REQUEST_TYPE.END_CUSTOMER_SESSION,
+                customer,
+                Request.USER_TYPE.CUSTOMER,
+                null,
+                null,
+                0.0,
+                "End customer session",
+                sessionId
+            );
+            return send(request);
+        } catch (Exception e) {
+            return new Response("end session failed: " + e.getMessage(), Response.RESPONSE_TYPE.ERROR);
+        }
+    }
 }

@@ -26,7 +26,6 @@ public class Manager extends Teller {
                 throw new SecurityException("manager is not authorized to view logs");
             }
         } catch (NoSuchMethodException ignored) {
-            // Optional; skip if server does not expose this method.
         } catch (SecurityException ex) {
             throw ex;
         } catch (Exception ex) {

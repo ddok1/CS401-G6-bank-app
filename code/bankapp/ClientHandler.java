@@ -189,7 +189,17 @@ class ClientHandler implements Runnable {
                     request.getPin(),
                     request.getAccountType()
                 );
-            } else {
+        } else if (rtype == REQUEST_TYPE.FREEZE_ACCOUNT) {
+            return handleFreezeAccount(request);
+        } else if (rtype == REQUEST_TYPE.UNFREEZE_ACCOUNT) {
+            return handleUnfreezeAccount(request);
+        } else if (rtype == REQUEST_TYPE.START_CUSTOMER_SESSION) {
+            return handleStartCustomerSession(request);
+        } else if (rtype == REQUEST_TYPE.TOUCH_CUSTOMER_SESSION) {
+            return server.touchCustomerSession(request.getSessionId());
+        } else if (rtype == REQUEST_TYPE.END_CUSTOMER_SESSION) {
+            return server.endCustomerSession(request.getSessionId());
+        } else {
             return new Response("Unknown Request", Response.RESPONSE_TYPE.INFO);
         }
     }
@@ -388,6 +398,19 @@ class ClientHandler implements Runnable {
         if (result != null && !result.passed()) {
             return validationErrorResponse(account, result, req.getAmount());
         }
+        
+        String key = account.getAccountNumber();
+        server.resetIfNewDay(key);
+
+        double used = server.dailyDeposits.getOrDefault(key, 0.0);
+        double limit = server.getLimit(req);
+
+        if (used + req.getAmount() > limit) {
+            return new Response(
+                "daily deposit limit exceeded",
+                Response.RESPONSE_TYPE.ERROR
+            );
+        }
 
         synchronized (account) {
             account.deposit(req.getAmount());
@@ -395,6 +418,8 @@ class ClientHandler implements Runnable {
             account.setLastUsed(new Date());
             server.saveAccounts();
         }
+        
+        server.dailyDeposits.put(key, used + req.getAmount());
 
         logger.logEvent(new Log(
             Log.TRANSACTION_TYPE.DEPOSIT,
@@ -455,6 +480,19 @@ class ClientHandler implements Runnable {
         if (result != null && !result.passed()) {
             return validationErrorResponse(account, result, req.getAmount());
         }
+        
+        String key = account.getAccountNumber();
+        server.resetIfNewDay(key);
+
+        double used = server.dailyWithdrawals.getOrDefault(key, 0.0);
+        double limit = server.getLimit(req);
+
+        if (used + req.getAmount() > limit) {
+            return new Response(
+                "daily withdrawal limit exceeded",
+                Response.RESPONSE_TYPE.ERROR
+            );
+        }
 
         synchronized (account) {
             if (account.getBalance() < req.getAmount()) {
@@ -467,6 +505,8 @@ class ClientHandler implements Runnable {
             server.saveAccounts();
         }
 
+        server.dailyWithdrawals.put(key, used + req.getAmount());
+        
         logger.logEvent(new Log(
             Log.TRANSACTION_TYPE.WITHDRAWAL,
             "withdrawal successful",
@@ -570,6 +610,116 @@ class ClientHandler implements Runnable {
             Response.RESPONSE_TYPE.SUCCESS
         );
     }
+    
+    private Response handleFreezeAccount(Request req) {
+        if (req == null) return nullRequestError;
+        if (req.getSourceAccount() == null) return nullAccountError;
+
+        Response accessError = validateAccess(req);
+        if (accessError != null) return accessError;
+
+        Account account;
+
+        synchronized (accounts) {
+            int idx = accounts.indexOf(req.getSourceAccount());
+
+            if (idx < 0) {
+                return accountNotFoundError;
+            }
+
+            account = accounts.get(idx);
+        }
+
+        synchronized (account) {
+            if (account.getSTATUS() == Account.ACCOUNT_STATUS.FROZEN) {
+                return new Response(
+                    "unable to process: account is already frozen",
+                    Response.RESPONSE_TYPE.ERROR
+                );
+            }
+
+            account.freeze();
+            account.setLastUsed(new Date());
+            server.saveAccounts();
+        }
+
+        logger.logEvent(new Log(
+            Log.TRANSACTION_TYPE.OTHER,
+            "account frozen",
+            0.0,
+            account.getLogKey()
+        ));
+        logger.saveLogs();
+
+        return new Response(
+            "Account frozen successfully",
+            Response.RESPONSE_TYPE.SUCCESS,
+            null,
+            false,
+            -1,
+            null,
+            null,
+            null,
+            account,
+            null,
+            false
+        );
+    }
+    
+    private Response handleUnfreezeAccount(Request req) {
+        if (req == null) return nullRequestError;
+        if (req.getSourceAccount() == null) return nullAccountError;
+
+        Response accessError = validateAccess(req);
+        if (accessError != null) return accessError;
+
+        Account account;
+
+        synchronized (accounts) {
+            int idx = accounts.indexOf(req.getSourceAccount());
+
+            if (idx < 0) {
+                return accountNotFoundError;
+            }
+
+            account = accounts.get(idx);
+        }
+
+        synchronized (account) {
+            if (account.getSTATUS() != Account.ACCOUNT_STATUS.FROZEN) {
+                return new Response(
+                    "unable to process: account is not frozen",
+                    Response.RESPONSE_TYPE.ERROR
+                );
+            }
+
+            account.unfreeze();
+            account.setLastUsed(new Date());
+            server.saveAccounts();
+        }
+
+        logger.logEvent(new Log(
+            Log.TRANSACTION_TYPE.OTHER,
+            "account unfrozen",
+            0.0,
+            account.getLogKey()
+        ));
+        logger.saveLogs();
+
+        return new Response(
+            "Account unfrozen successfully",
+            Response.RESPONSE_TYPE.SUCCESS,
+            null,
+            false,
+            -1,
+            null,
+            null,
+            null,
+            account,
+            null,
+            false
+        );
+    }
 
     private Response handleTransfer(Request req) {
         if (req == null) return nullRequestError;
@@ -579,8 +729,20 @@ class ClientHandler implements Runnable {
         Response accessError = validateAccess(req);
         if (accessError != null) return accessError;
 
-        Account source = req.getSourceAccount();
-        Account target = req.getTargetAccount();
+        Account source;
+        Account target;
+
+        synchronized (accounts) {
+            int sIdx = accounts.indexOf(req.getSourceAccount());
+            int tIdx = accounts.indexOf(req.getTargetAccount());
+
+            if (sIdx < 0 || tIdx < 0) {
+                return accountNotFoundError;
+            }
+
+            source = accounts.get(sIdx);
+            target = accounts.get(tIdx);
+        }
 
         if (source == target) {
             return sameAccountTransferError;
@@ -595,6 +757,19 @@ class ClientHandler implements Runnable {
         ValidationMessage result = runTransferValidation(source, target, req.getPerson(), req.getAmount());
         if (result != null && !result.passed()) {
             return validationErrorResponse(source, result, req.getAmount());
+        }
+        
+        String key = source.getAccountNumber();
+        server.resetIfNewDay(key);
+
+        double used = server.dailyWithdrawals.getOrDefault(key, 0.0);
+        double limit = server.getLimit(req);
+
+        if (used + req.getAmount() > limit) {
+            return new Response(
+                "daily transfer limit exceeded",
+                Response.RESPONSE_TYPE.ERROR
+            );
         }
 
         synchronized (source) {
@@ -611,6 +786,8 @@ class ClientHandler implements Runnable {
                 target.setLastUsed(now);
             }
         }
+        
+        server.dailyWithdrawals.put(key, used + req.getAmount());
 
         logger.logEvent(new Log(
             Log.TRANSACTION_TYPE.TRANSFER,
@@ -686,8 +863,33 @@ class ClientHandler implements Runnable {
 
         return new Response(output, Response.RESPONSE_TYPE.LOG);
     }
+    
+    private Response handleStartCustomerSession(Request req) {
+        if (!(req.getPerson() instanceof Customer)) {
+            return new Response("unable to start session: requester was not a customer", Response.RESPONSE_TYPE.ERROR);
+        }
+        return server.startCustomerSession((Customer) req.getPerson(), req.getSourceAccount(), req.getSessionId());
+    }
 
     private Response handleOther(Request req) {
+        if (req == null) {
+            return nullRequestError;
+        }
+
+        String message = req.getText();
+
+        // if this is an ATM log attempt, handle it
+        if (message != null && !message.trim().isEmpty()) {
+            logger.logEvent(new Log(
+                Log.TRANSACTION_TYPE.OTHER,
+                message,
+                0.0,
+                "ATM"
+            ));
+            logger.saveLogs();
+
+            return new Response("ATM log recorded", Response.RESPONSE_TYPE.SUCCESS);
+        }
         return new Response("No handler implemented for OTHER request type", Response.RESPONSE_TYPE.INFO);
     }
 }
