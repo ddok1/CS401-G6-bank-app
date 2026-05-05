@@ -20,6 +20,10 @@ public class ATM {
         this.failedAttempts = 0;
         this.serviceCompleted = false;
     }
+    
+    public BankClientFacade getClient() {
+        return client;
+    }
  
     public String getConnectedServerIP() {
         return serverIP;
@@ -27,6 +31,10 @@ public class ATM {
     
     public Response transfer(double amount, Account source, Account target, Person person) {
         return client.transfer(person, Request.USER_TYPE.ATM, source, target, amount);
+    }
+    
+    public Response viewAccount(Account account, Customer customer) {
+        return client.viewAccount(customer, Request.USER_TYPE.ATM, account);
     }
 
     public Response withdraw(double amount, Account account, Person person) {

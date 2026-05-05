@@ -16,6 +16,7 @@ public class ATMGUI extends JFrame {
     private Account account;
     private List<Account> accounts;
     private JLabel header;
+    private String sessionId;
     
     private JTextArea outputArea;
     private JTextField usernameField;
@@ -143,13 +144,35 @@ public class ATMGUI extends JFrame {
                 if (response != null && response.isAuthenticated()) {
                     customer = response.getCustomer();
                     accounts = response.getAccounts();
+
                     account = chooseAccount(accounts);
                     if (account == null) {
                         JOptionPane.showMessageDialog(this, "No account selected");
                         return;
                     }
-                    updateHeader();
-                    showATM();
+
+                    // --- NEW SESSION START ---
+                    sessionId = atm.getClient().createSessionId();
+
+                    Response sessionResponse = atm.getClient().startCustomerSession(
+                        customer,
+                        account,
+                        sessionId
+                    );
+
+                    if (sessionResponse == null ||
+                        sessionResponse.getType() == Response.RESPONSE_TYPE.ERROR) {
+
+                        JOptionPane.showMessageDialog(
+                            this,
+                            sessionResponse == null ? "No response from server" : sessionResponse.getMessage(),
+                            "Session Error",
+                            JOptionPane.ERROR_MESSAGE
+                        );
+                        return;
+                    }
+                    // --- END NEW SESSION START ---
+
                     updateHeader();
                     showATM();
                 } else {
@@ -177,6 +200,27 @@ public class ATMGUI extends JFrame {
         	showATM();
         } else {
         	showLogin();
+        }
+    }
+    private void refreshAccounts() {
+        try {
+            Response res = atm.login(customer.getUsername(), 0); 
+            // OR better: you should have a "get accounts" endpoint
+
+            if (res != null && res.getAccounts() != null) {
+                accounts = res.getAccounts();
+            }
+
+            // re-pick current account from refreshed list
+            for (Account a : accounts) {
+                if (a.equals(account)) {
+                    account = a;
+                    break;
+                }
+            }
+
+        } catch (Exception e) {
+            showError("Failed to refresh accounts: " + e.getMessage());
         }
     }
     
@@ -209,7 +253,7 @@ public class ATMGUI extends JFrame {
             );
 
             showResponse(response, "Transfer");
-
+            refreshAccounts();
             amountField.setText("");
 
         } catch (Exception ex) {
@@ -226,15 +270,6 @@ public class ATMGUI extends JFrame {
 
         account = selected;
         updateHeader();
-
-        JOptionPane.showMessageDialog(
-            this,
-            "Now using: " + account.getTYPE()
-                + " | #" + account.getAccountNumber()
-                + " | Balance: " + account.getBalance(),
-            "Account Selected",
-            JOptionPane.INFORMATION_MESSAGE
-        );
     }
     
     private void updateHeader() {

@@ -61,9 +61,8 @@ public class ManagerGUI extends JFrame {
         amountPanel.add(amountField, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new GridLayout(0, 3, 10, 10));
-
+        JButton createCustomerBtn = new JButton("Create Customer Account");
         JButton readyBtn = new JButton("Ready for Customer");
-        JButton loadCustomerBtn = new JButton("Load / Onboard Customer");
         JButton chooseAccountBtn = new JButton("Choose Customer Account");
         JButton openNewAccountBtn = new JButton("Open New Account");
         JButton freezeBtn = new JButton("Freeze Account");
@@ -79,17 +78,11 @@ public class ManagerGUI extends JFrame {
         JButton endSessionBtn = new JButton("End Session");
         JButton exitBtn = new JButton("Exit");
 
-        JButton[] buttons = {
-            readyBtn, loadCustomerBtn, chooseAccountBtn, openNewAccountBtn, freezeBtn, unfreezeBtn, checkRequestBtn,
-            balanceBtn, depositBtn, withdrawBtn, transferBtn, freezeBtn, unfreezeBtn,
-            closeAccountBtn, selectAnyAccountBtn, logsBtn, endSessionBtn, exitBtn
-        };
-        for (JButton b : buttons) styleButton(b);
-
-        readyBtn.addActionListener(e -> readyForNextCustomer());
-        loadCustomerBtn.addActionListener(e -> loadOrOnboardCustomer());
-        chooseAccountBtn.addActionListener(e -> chooseExistingAccount());
+        // Action Listeners
         openNewAccountBtn.addActionListener(e -> openAdditionalAccount());
+        chooseAccountBtn.addActionListener(e -> chooseExistingAccount());
+        createCustomerBtn.addActionListener(e -> createNewCustomerFlow());
+        readyBtn.addActionListener(e -> readyForNextCustomer());
         freezeBtn.addActionListener(e -> freezeAccount());
         unfreezeBtn.addActionListener(e -> unfreezeAccount());
         checkRequestBtn.addActionListener(e -> checkCustomerRequest());
@@ -97,15 +90,29 @@ public class ManagerGUI extends JFrame {
         depositBtn.addActionListener(e -> deposit());
         withdrawBtn.addActionListener(e -> withdraw());
         transferBtn.addActionListener(e -> transfer());
-        freezeBtn.addActionListener(e -> freezeAccount());
-        unfreezeBtn.addActionListener(e -> unfreezeAccount());
         closeAccountBtn.addActionListener(e -> closeAccount());
         selectAnyAccountBtn.addActionListener(e -> selectAnyAccount());
         logsBtn.addActionListener(e -> viewLogs());
         endSessionBtn.addActionListener(e -> endSession());
         exitBtn.addActionListener(e -> exit());
 
-        for (JButton b : buttons) buttonPanel.add(b);
+        // Neater Set Up Buttons
+        buttonPanel.add(createCustomerBtn);
+        buttonPanel.add(readyBtn);
+        buttonPanel.add(chooseAccountBtn);
+        buttonPanel.add(openNewAccountBtn);
+        buttonPanel.add(freezeBtn);
+        buttonPanel.add(unfreezeBtn);
+        buttonPanel.add(checkRequestBtn);
+        buttonPanel.add(balanceBtn);
+        buttonPanel.add(depositBtn);
+        buttonPanel.add(withdrawBtn);
+        buttonPanel.add(transferBtn);
+        buttonPanel.add(closeAccountBtn);
+        buttonPanel.add(selectAnyAccountBtn);
+        buttonPanel.add(logsBtn);
+        buttonPanel.add(endSessionBtn);
+        buttonPanel.add(exitBtn);
 
         center.add(sessionLabel);
         center.add(Box.createVerticalStrut(6));
@@ -117,6 +124,57 @@ public class ManagerGUI extends JFrame {
 
         root.add(center, BorderLayout.CENTER);
         setContentPane(root);
+    }
+    
+    private void createNewCustomerFlow() {
+        try {
+            String first = JOptionPane.showInputDialog(this, "First name:");
+            if (first == null || first.trim().isEmpty()) return;
+
+            String last = JOptionPane.showInputDialog(this, "Last name:");
+            if (last == null || last.trim().isEmpty()) return;
+
+            String username = JOptionPane.showInputDialog(this, "Username:");
+            if (username == null || username.trim().isEmpty()) return;
+
+            String pinText = JOptionPane.showInputDialog(this, "PIN:");
+            if (pinText == null || pinText.trim().isEmpty()) return;
+
+            int pin = Integer.parseInt(pinText.trim());
+
+            Account.ACCOUNT_TYPE type = promptAccountType();
+            if (type == null) return;
+
+            Response response = client.createCustomerAndAccount(
+                manager,
+                first.trim(),
+                last.trim(),
+                username.trim(),
+                pin,
+                type
+            );
+
+            if (response != null && response.getType() == Response.RESPONSE_TYPE.SUCCESS) {
+                this.customer = response.getCustomer();
+                this.account = response.getAccount();
+                this.customerAccounts = new java.util.ArrayList<>();
+                customerAccounts.add(account);
+
+                manager.beginSession(customer);
+
+                if (customer.getActiveChannel() == Customer.ACCESS_CHANNEL.NONE) {
+                    customer.startTellerSession();
+                }
+
+                sessionLabel.setText("Serving: " + customer.getName());
+                refreshAccountLabel();
+            }
+
+            showResponse(response, "Create Customer");
+
+        } catch (Exception ex) {
+            showError(ex.getMessage());
+        }
     }
 
     private Account chooseAccount(java.util.List<Account> accounts) {
