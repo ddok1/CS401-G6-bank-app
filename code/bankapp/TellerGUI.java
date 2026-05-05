@@ -290,6 +290,8 @@ public class TellerGUI extends JFrame {
         JButton loadCustomerBtn = new JButton("Load / Onboard Customer");
         JButton chooseAccountBtn = new JButton("Choose Account");
         JButton openNewAccountBtn = new JButton("Open New Account");
+        JButton freezeBtn = new JButton("Freeze Account");
+        JButton unfreezeBtn = new JButton("Unfreeze Account");
         JButton checkRequestBtn = new JButton("Check Customer Request");
         JButton balanceBtn = new JButton("Check Balance");
         JButton depositBtn = new JButton("Deposit");
@@ -300,6 +302,8 @@ public class TellerGUI extends JFrame {
         styleButton(loadCustomerBtn);
         styleButton(chooseAccountBtn);
         styleButton(openNewAccountBtn);
+        styleButton(freezeBtn);
+        styleButton(unfreezeBtn);
         styleButton(checkRequestBtn);
         styleButton(balanceBtn);
         styleButton(depositBtn);
@@ -310,6 +314,8 @@ public class TellerGUI extends JFrame {
         loadCustomerBtn.addActionListener(e -> loadOrOnboardCustomer());
         chooseAccountBtn.addActionListener(e -> chooseExistingAccount());
         openNewAccountBtn.addActionListener(e -> openAdditionalAccount());
+        freezeBtn.addActionListener(e -> freezeAccount());
+        unfreezeBtn.addActionListener(e -> unfreezeAccount());
         checkRequestBtn.addActionListener(e -> checkCustomerRequest());
         balanceBtn.addActionListener(e -> checkBalance());
         depositBtn.addActionListener(e -> deposit());
@@ -320,6 +326,8 @@ public class TellerGUI extends JFrame {
         buttonPanel.add(loadCustomerBtn);
         buttonPanel.add(chooseAccountBtn);
         buttonPanel.add(openNewAccountBtn);
+        buttonPanel.add(freezeBtn);
+        buttonPanel.add(unfreezeBtn);
         buttonPanel.add(checkRequestBtn);
         buttonPanel.add(balanceBtn);
         buttonPanel.add(depositBtn);
@@ -446,6 +454,49 @@ public class TellerGUI extends JFrame {
         }
 
         refreshAccountLabel();
+    }
+    
+    private void freezeAccount() {
+        try {
+            requireActiveSession();
+
+            Response response = client.freezeAccount(
+                teller,
+                Request.USER_TYPE.TELLER,
+                account
+            );
+
+            if (response != null && response.getType() != Response.RESPONSE_TYPE.ERROR) {
+            	if (response != null && response.getAccount() != null) {
+            	    account = response.getAccount();
+            	}
+            	refreshAccountLabel();            }
+
+            showResponse(response, "Freeze Account");
+        } catch (Exception ex) {
+            showError(ex.getMessage());
+        }
+    }
+
+    private void unfreezeAccount() {
+        try {
+            requireActiveSession();
+
+            Response response = client.unfreezeAccount(
+                teller,
+                Request.USER_TYPE.TELLER,
+                account
+            );
+
+            if (response != null && response.getType() != Response.RESPONSE_TYPE.ERROR) {
+                account.setSTATUS(Account.ACCOUNT_STATUS.OPEN);
+                refreshAccountLabel();
+            }
+
+            showResponse(response, "Unfreeze Account");
+        } catch (Exception ex) {
+            showError(ex.getMessage());
+        }
     }
 
     private void checkBalance() {

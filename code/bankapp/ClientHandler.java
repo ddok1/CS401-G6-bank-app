@@ -66,21 +66,28 @@ class ClientHandler implements Runnable {
             i = new ObjectInputStream(client.getInputStream());
 
             while (true) {
-                Object request = i.readObject();
+            	Object obj = i.readObject();
 
-                if (request == null) {
-                    break;
-                }
+            	if (obj == null) {
+            	    break;
+            	}
 
-                System.out.println("[REQUEST RECEIVED] " + formatRequest((Request) request));
+            	if (!(obj instanceof Request)) {
+            	    System.out.println("[HANDLER] Invalid object received: " + obj);
+            	    continue;
+            	}
 
-                Response response = handleRequest((Request) request);
+            	Request request = (Request) obj;
 
-                System.out.println("[RESPONSE SENT] " + formatResponse(response));
+            	System.out.println("[REQUEST RECEIVED] " + formatRequest(request));
 
-                o.reset();
-                o.writeObject(response);
-                o.flush();
+            	Response response = handleRequest(request);
+
+            	System.out.println("[RESPONSE SENT] " + formatResponse(response));
+
+            	o.reset();
+            	o.writeObject(response);
+            	o.flush();
             }
         } catch (EOFException e) {
             System.out.println("[HANDLER] Client disconnected normally: " + client.getInetAddress().getHostAddress());
@@ -172,6 +179,20 @@ class ClientHandler implements Runnable {
             return handleFindCustomer(request);
         } else if (rtype == REQUEST_TYPE.OTHER) {
             return handleOther(request);
+        } else if (rtype == REQUEST_TYPE.GET_ALL_ACCOUNTS) {
+            return server.getAllAccounts();
+        } else if (rtype == REQUEST_TYPE.CREATE_CUSTOMER_AND_ACCOUNT) {
+            return server.createCustomerAndAccount(
+                    request.getFirstName(),
+                    request.getLastName(),
+                    request.getUsername(),
+                    request.getPin(),
+                    request.getAccountType()
+                );
+        } else if (rtype == REQUEST_TYPE.FREEZE_ACCOUNT) {
+            return handleFreezeAccount(request);
+        } else if (rtype == REQUEST_TYPE.UNFREEZE_ACCOUNT) {
+            return handleUnfreezeAccount(request);
         } else {
             return new Response("Unknown Request", Response.RESPONSE_TYPE.INFO);
         }
@@ -551,6 +572,116 @@ class ClientHandler implements Runnable {
             0.0,
             "Account closed successfully",
             Response.RESPONSE_TYPE.SUCCESS
+        );
+    }
+    
+    private Response handleFreezeAccount(Request req) {
+        if (req == null) return nullRequestError;
+        if (req.getSourceAccount() == null) return nullAccountError;
+
+        Response accessError = validateAccess(req);
+        if (accessError != null) return accessError;
+
+        Account account;
+
+        synchronized (accounts) {
+            int idx = accounts.indexOf(req.getSourceAccount());
+
+            if (idx < 0) {
+                return accountNotFoundError;
+            }
+
+            account = accounts.get(idx);
+        }
+
+        synchronized (account) {
+            if (account.getSTATUS() == Account.ACCOUNT_STATUS.FROZEN) {
+                return new Response(
+                    "unable to process: account is already frozen",
+                    Response.RESPONSE_TYPE.ERROR
+                );
+            }
+
+            account.freeze();
+            account.setLastUsed(new Date());
+            server.saveAccounts();
+        }
+
+        logger.logEvent(new Log(
+            Log.TRANSACTION_TYPE.OTHER,
+            "account frozen",
+            0.0,
+            account.getLogKey()
+        ));
+        logger.saveLogs();
+
+        return new Response(
+            "Account frozen successfully",
+            Response.RESPONSE_TYPE.SUCCESS,
+            null,
+            false,
+            -1,
+            null,
+            null,
+            null,
+            account,
+            null,
+            false
+        );
+    }
+    
+    private Response handleUnfreezeAccount(Request req) {
+        if (req == null) return nullRequestError;
+        if (req.getSourceAccount() == null) return nullAccountError;
+
+        Response accessError = validateAccess(req);
+        if (accessError != null) return accessError;
+
+        Account account;
+
+        synchronized (accounts) {
+            int idx = accounts.indexOf(req.getSourceAccount());
+
+            if (idx < 0) {
+                return accountNotFoundError;
+            }
+
+            account = accounts.get(idx);
+        }
+
+        synchronized (account) {
+            if (account.getSTATUS() != Account.ACCOUNT_STATUS.FROZEN) {
+                return new Response(
+                    "unable to process: account is not frozen",
+                    Response.RESPONSE_TYPE.ERROR
+                );
+            }
+
+            account.unfreeze();
+            account.setLastUsed(new Date());
+            server.saveAccounts();
+        }
+
+        logger.logEvent(new Log(
+            Log.TRANSACTION_TYPE.OTHER,
+            "account unfrozen",
+            0.0,
+            account.getLogKey()
+        ));
+        logger.saveLogs();
+
+        return new Response(
+            "Account unfrozen successfully",
+            Response.RESPONSE_TYPE.SUCCESS,
+            null,
+            false,
+            -1,
+            null,
+            null,
+            null,
+            account,
+            null,
+            false
         );
     }
 

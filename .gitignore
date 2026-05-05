@@ -4,6 +4,7 @@ bin/
 logs.txt
 .DS_Store
 
+
 # runtime / local files
 accounts.dat
 
@@ -14,3 +15,6 @@ accounts.dat
 # local test drivers
 ATMFlowDriver.java
 TellerGUITestDriver.java
+
+accounts.dat
+
