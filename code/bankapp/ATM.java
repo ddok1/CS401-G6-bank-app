@@ -25,8 +25,8 @@ public class ATM {
         return serverIP;
     }
     
-    public Response transfer(double amount, Account source, String targetAccountNumber, Person person) {
-        return client.transfer(person, Request.USER_TYPE.ATM, source, null, amount);
+    public Response transfer(double amount, Account source, Account target, Person person) {
+        return client.transfer(person, Request.USER_TYPE.ATM, source, target, amount);
     }
 
     public Response withdraw(double amount, Account account, Person person) {

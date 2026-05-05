@@ -153,6 +153,7 @@ public class ATMJTest {
 	    ATM atm = new ATM("localhost");
 
 	    Customer user = new Customer("", "", new Address(), "user", 1234);
+	    Customer user2 = new Customer("", "", new Address(), "user", 1234);
 
 	    Account source = new Account(
 	        500,
@@ -160,8 +161,15 @@ public class ATMJTest {
 	        Account.ACCOUNT_TYPE.CHECKING,
 	        user
 	    );
+	    
+	    Account target = new Account(
+		        500,
+		        Account.ACCOUNT_STATUS.OPEN,
+		        Account.ACCOUNT_TYPE.CHECKING,
+		        user2
+		    );
 
-	    Response response = atm.transfer(100, source, "TARGET123", user);
+	    Response response = atm.transfer(100, source, target, user);
 
 	    assertNotNull(response);
 	    assertNotNull(response.getType());
