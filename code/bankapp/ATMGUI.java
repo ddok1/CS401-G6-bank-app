@@ -229,6 +229,11 @@ public class ATMGUI extends JFrame {
 
     private void deposit() {
         try {
+            Account selected = chooseAccount(accounts);
+            if (selected == null) {
+                return;
+            }
+            account = selected;
             double amount = parseAmount();
 
             if (amount > atm.getDailyDepositLimit()) {
@@ -247,6 +252,11 @@ public class ATMGUI extends JFrame {
 
     private void withdraw() {
         try {
+            Account selected = chooseAccount(accounts);
+            if (selected == null) {
+                return;
+            }
+            account = selected;
             double amount = parseAmount();
 
             if (amount > atm.getDailyWithdrawalLimit()) {
