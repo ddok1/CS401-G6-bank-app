@@ -122,6 +122,7 @@ public class ATMGUI extends JFrame {
         JButton withdrawBtn = new JButton("Withdraw");
         JButton transferBtn = new JButton("Transfer");
         JButton chooseAccountBtn = new JButton("Choose Account");
+        
         JButton quitBtn = new JButton("Quit");
 
         buttons.add(balanceBtn);
@@ -188,6 +189,7 @@ public class ATMGUI extends JFrame {
         withdrawBtn.addActionListener(e -> withdraw());
         quitBtn.addActionListener(e -> quit());
         transferBtn.addActionListener(e -> transfer());
+        chooseAccountBtn.addActionListener(e -> chooseActiveAccount());
         
         // Adding to container
         container.add(loginPanel, "LOGIN");
