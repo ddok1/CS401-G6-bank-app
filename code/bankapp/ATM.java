@@ -92,19 +92,18 @@ public class ATM {
     public void logAttempt(Log log) {
         if (log == null) return;
 
-        Response response = client.send(new Request(
-                Request.REQUEST_TYPE.OTHER,
-                Request.USER_TYPE.ATM,
-                null,
-                null,
-                null,
-                0.0,
-                log.toString(),
-                true,
-                null,
-                null,
-                0
-            ));
+
+        Response response = client.send(Request.transaction(
+            Request.REQUEST_TYPE.OTHER,
+            Request.USER_TYPE.ATM,
+            null,
+            null,
+            null,
+            0.0,
+            log.toString(),
+            null
+        ));
+        
         if (response == null || response.getType() == Response.RESPONSE_TYPE.ERROR) {
             displayError();
         }
