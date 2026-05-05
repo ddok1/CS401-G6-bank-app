@@ -62,6 +62,13 @@ public class ATM {
 
         if (response == null || !response.isAuthenticated()) {
             failedAttempts++;
+            
+            logAttempt(new Log(
+            	    Log.TRANSACTION_TYPE.ERROR,
+            	    "Failed ATM login attempt for username: " + username,
+            	    0.0,
+            	    "ATM"
+            	));
 
             if (failedAttempts >= 5) {
                 serviceCompleted = true;
@@ -83,7 +90,24 @@ public class ATM {
     }
 
     public void logAttempt(Log log) {
-        // optional local ATM logging hook
+        if (log == null) return;
+
+        Response response = client.send(new Request(
+                Request.REQUEST_TYPE.OTHER,
+                Request.USER_TYPE.ATM,
+                null,
+                null,
+                null,
+                0.0,
+                log.toString(),
+                true,
+                null,
+                null,
+                0
+            ));
+        if (response == null || response.getType() == Response.RESPONSE_TYPE.ERROR) {
+            displayError();
+        }
     }
 
     public double getDailyWithdrawalLimit() {
