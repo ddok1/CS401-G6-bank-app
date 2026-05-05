@@ -183,19 +183,21 @@ public class ATMGUI extends JFrame {
         try {
             double amount = parseAmount();
 
-            String targetAccountNumber = JOptionPane.showInputDialog(
-                this,
-                "Enter target account number:"
-            );
+            Account target = chooseAccount(accounts);
 
-            if (targetAccountNumber == null || targetAccountNumber.trim().isEmpty()) {
+            if (target == null) {
                 return; // user cancelled
+            }
+
+            if (target.equals(account)) {
+                showError("Cannot transfer to the same account");
+                return;
             }
 
             Response response = atm.transfer(
                 amount,
                 account,
-                targetAccountNumber.trim(),
+                target,
                 customer
             );
 

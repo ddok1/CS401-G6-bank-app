@@ -561,4 +561,12 @@ public class BankClientFacade {
                     Response.RESPONSE_TYPE.ERROR);
         }
     }
+    
+    public Response freezeAccount(Person person, Request.USER_TYPE userType, Account account) {
+        return send(buildRequest(Request.REQUEST_TYPE.FREEZE_ACCOUNT, person, userType, account, null, 0.0, "Freeze account request"));
+    }
+
+    public Response unfreezeAccount(Person person, Request.USER_TYPE userType, Account account) {
+        return send(buildRequest(Request.REQUEST_TYPE.UNFREEZE_ACCOUNT, person, userType, account, null, 0.0, "Unfreeze account request"));
+    }
 }
