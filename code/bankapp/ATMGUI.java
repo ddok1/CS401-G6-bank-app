@@ -16,6 +16,7 @@ public class ATMGUI extends JFrame {
     private Account account;
     private List<Account> accounts;
     private JLabel header;
+    private String sessionId;
     
     private JTextArea outputArea;
     private JTextField usernameField;
@@ -141,13 +142,35 @@ public class ATMGUI extends JFrame {
                 if (response != null && response.isAuthenticated()) {
                     customer = response.getCustomer();
                     accounts = response.getAccounts();
+
                     account = chooseAccount(accounts);
                     if (account == null) {
                         JOptionPane.showMessageDialog(this, "No account selected");
                         return;
                     }
-                    updateHeader();
-                    showATM();
+
+                    // --- NEW SESSION START ---
+                    sessionId = atm.getClient().createSessionId();
+
+                    Response sessionResponse = atm.getClient().startCustomerSession(
+                        customer,
+                        account,
+                        sessionId
+                    );
+
+                    if (sessionResponse == null ||
+                        sessionResponse.getType() == Response.RESPONSE_TYPE.ERROR) {
+
+                        JOptionPane.showMessageDialog(
+                            this,
+                            sessionResponse == null ? "No response from server" : sessionResponse.getMessage(),
+                            "Session Error",
+                            JOptionPane.ERROR_MESSAGE
+                        );
+                        return;
+                    }
+                    // --- END NEW SESSION START ---
+
                     updateHeader();
                     showATM();
                 } else {

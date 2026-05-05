@@ -193,6 +193,12 @@ class ClientHandler implements Runnable {
             return handleFreezeAccount(request);
         } else if (rtype == REQUEST_TYPE.UNFREEZE_ACCOUNT) {
             return handleUnfreezeAccount(request);
+        } else if (rtype == REQUEST_TYPE.START_CUSTOMER_SESSION) {
+            return handleStartCustomerSession(request);
+        } else if (rtype == REQUEST_TYPE.TOUCH_CUSTOMER_SESSION) {
+            return server.touchCustomerSession(request.getSessionId());
+        } else if (rtype == REQUEST_TYPE.END_CUSTOMER_SESSION) {
+            return server.endCustomerSession(request.getSessionId());
         } else {
             return new Response("Unknown Request", Response.RESPONSE_TYPE.INFO);
         }
@@ -856,6 +862,13 @@ class ClientHandler implements Runnable {
         }
 
         return new Response(output, Response.RESPONSE_TYPE.LOG);
+    }
+    
+    private Response handleStartCustomerSession(Request req) {
+        if (!(req.getPerson() instanceof Customer)) {
+            return new Response("unable to start session: requester was not a customer", Response.RESPONSE_TYPE.ERROR);
+        }
+        return server.startCustomerSession((Customer) req.getPerson(), req.getSourceAccount(), req.getSessionId());
     }
 
     private Response handleOther(Request req) {

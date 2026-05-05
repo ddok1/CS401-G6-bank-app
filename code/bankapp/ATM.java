@@ -20,6 +20,10 @@ public class ATM {
         this.failedAttempts = 0;
         this.serviceCompleted = false;
     }
+    
+    public BankClientFacade getClient() {
+        return client;
+    }
  
     public String getConnectedServerIP() {
         return serverIP;

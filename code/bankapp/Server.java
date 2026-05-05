@@ -24,10 +24,13 @@ public class Server {
     public Map<String, Double> dailyWithdrawals = new HashMap<>();
     public Map<String, Double> dailyDeposits = new HashMap<>();
     public Map<String, Date> lastReset = new HashMap<>();
+    private final Map<String, SessionInfo> sessionsById = new HashMap<>();
+    private final Map<String, String> activeSessionByAccount = new HashMap<>();
 
     
     public static final double ATM_LIMIT = 5000.0;
     public static final double TELLER_LIMIT = 10000.0;
+    private static final long SESSION_TIMEOUT_MS = 30L * 60L * 1000L;
     
     
     private static final String ACCOUNTS_FILE = "accounts.dat";
@@ -783,5 +786,89 @@ public class Server {
 
     public double getLimit(Request req) {
         return (req.getUserType() == Request.USER_TYPE.ATM) ? ATM_LIMIT : TELLER_LIMIT;
+    }
+    
+    public synchronized Response startCustomerSession(Customer customer, Account account, String sessionId) {
+        cleanupExpiredSessions();
+
+        if (customer == null) {
+            return new Response("unable to start session: customer was null", Response.RESPONSE_TYPE.ERROR);
+        }
+        if (account == null) {
+            return new Response("unable to start session: account was null", Response.RESPONSE_TYPE.ERROR);
+        }
+        if (sessionId == null || sessionId.isBlank()) {
+            return new Response("unable to start session: session id was blank", Response.RESPONSE_TYPE.ERROR);
+        }
+
+        String accountNumber = account.getAccountNumber();
+
+        String existingSessionId = activeSessionByAccount.get(accountNumber);
+        if (existingSessionId != null && sessionsById.containsKey(existingSessionId)) {
+            logger.logEvent(new Log(
+                Log.TRANSACTION_TYPE.ERROR,
+                "HIGH PRIORITY: attempted multiple login instances for account " + accountNumber,
+                0.0,
+                account.getLogKey()
+            ));
+            logger.saveLogs();
+
+            return new Response(
+                "account is already in use by another active customer session",
+                Response.RESPONSE_TYPE.ERROR
+            );
+        }
+
+        SessionInfo session = new SessionInfo(
+            sessionId,
+            customer.getUsername(),
+            accountNumber
+        );
+
+        sessionsById.put(sessionId, session);
+        activeSessionByAccount.put(accountNumber, sessionId);
+
+        return new Response("session started", Response.RESPONSE_TYPE.SUCCESS);
+    }
+
+    public synchronized Response touchCustomerSession(String sessionId) {
+        cleanupExpiredSessions();
+
+        if (sessionId == null || sessionId.isBlank()) {
+            return new Response("session id was blank", Response.RESPONSE_TYPE.ERROR);
+        }
+
+        SessionInfo session = sessionsById.get(sessionId);
+        if (session == null) {
+            return new Response("session expired or invalid", Response.RESPONSE_TYPE.ERROR);
+        }
+
+        session.touch();
+        return new Response("session active", Response.RESPONSE_TYPE.SUCCESS);
+    }
+
+    public synchronized Response endCustomerSession(String sessionId) {
+        SessionInfo session = sessionsById.remove(sessionId);
+
+        if (session != null) {
+            activeSessionByAccount.remove(session.getAccountNumber());
+        }
+
+        return new Response("session ended", Response.RESPONSE_TYPE.SUCCESS);
+    }
+
+    private synchronized void cleanupExpiredSessions() {
+        java.util.Iterator<Map.Entry<String, SessionInfo>> iterator =
+            sessionsById.entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            Map.Entry<String, SessionInfo> entry = iterator.next();
+            SessionInfo session = entry.getValue();
+
+            if (session.isExpired(SESSION_TIMEOUT_MS)) {
+                activeSessionByAccount.remove(session.getAccountNumber());
+                iterator.remove();
+            }
+        }
     }
 }
