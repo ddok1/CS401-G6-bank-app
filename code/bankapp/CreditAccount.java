@@ -7,25 +7,65 @@ public class CreditAccount extends Account {
 
 	public CreditAccount(double balance, ACCOUNT_STATUS status, ACCOUNT_TYPE type, Person user) {
 		super(balance, status, type, user);
-		// TODO Auto-generated constructor stub -- keeping for now for testing purposes
 	}
 	public CreditAccount(double balance, ACCOUNT_STATUS status, ACCOUNT_TYPE type, Person user, String accountNumber) {
 		super(balance, status, type, user, accountNumber);
 	}
-
-	// reduce debt
-	public void makePayment(double amount) {
-		// subtract amount from balance
-		withdraw(amount);
-		
-	}
 	
-	// increase debt
-	public double charge(double amount) {
-		
-		// multiply amount by interest rate
-		// add to balance
-		double total = 0.0;
-		return total;
-	}
+    public double getCreditLimit() {
+        return creditLimit;
+    }
+
+    public void setCreditLimit(double creditLimit) {
+        if (creditLimit < 0) {
+            throw new IllegalArgumentException("credit limit cannot be negative");
+        }
+        this.creditLimit = creditLimit;
+    }
+
+    public double getInterestRate() {
+        return interestRate;
+    }
+
+    public void setInterestRate(double interestRate) {
+        if (interestRate < 0) {
+            throw new IllegalArgumentException("interest rate cannot be negative");
+        }
+        this.interestRate = interestRate;
+    }
+
+    public boolean canCharge(double amount) {
+        return getBalance() + amount <= creditLimit;
+    }
+
+    public double charge(double amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("charge amount must be greater than 0");
+        }
+
+        if (!canCharge(amount)) {
+            throw new IllegalArgumentException("charge exceeds credit limit");
+        }
+
+        deposit(amount);
+        return getBalance();
+    }
+
+    public void makePayment(double amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("payment must be greater than 0");
+        }
+
+        withdraw(amount);
+
+        if (getBalance() < 0) {
+            setBalance(0);
+        }
+    }
+
+    public double applyInterest() {
+        double interest = getBalance() * interestRate;
+        deposit(interest);
+        return interest;
+    }
 }

@@ -163,7 +163,7 @@ public class Account implements Serializable {
 		if (!authorizedUsers.isEmpty() && authorizedUsers.get(0) != null) {
 			owner = authorizedUsers.get(0).getName();
 		}
-		return owner + "|" + accountNumber;
+		return owner + "-" + accountNumber;
 	}
 	
 

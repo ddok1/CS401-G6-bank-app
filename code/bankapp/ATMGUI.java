@@ -120,12 +120,14 @@ public class ATMGUI extends JFrame {
         JButton depositBtn = new JButton("Deposit");
         JButton withdrawBtn = new JButton("Withdraw");
         JButton transferBtn = new JButton("Transfer");
+        JButton chooseAccountBtn = new JButton("Choose Account");
         JButton quitBtn = new JButton("Quit");
 
         buttons.add(balanceBtn);
         buttons.add(depositBtn);
         buttons.add(withdrawBtn);
         buttons.add(transferBtn);
+        buttons.add(chooseAccountBtn);
         buttons.add(quitBtn);
 
         atmPanel.add(buttons, BorderLayout.CENTER);
@@ -188,6 +190,11 @@ public class ATMGUI extends JFrame {
             if (target == null) {
                 return; // user cancelled
             }
+            
+            if (account.getTYPE() == Account.ACCOUNT_TYPE.CREDIT) {
+                showError("Credit accounts can only receive transfers at the ATM.");
+                return;
+            }
 
             if (target.equals(account)) {
                 showError("Cannot transfer to the same account");
@@ -210,31 +217,70 @@ public class ATMGUI extends JFrame {
         }
     }
     
-    private void updateHeader() {
-        if (customer != null) {
-            header.setText(
-                "Customer: " + customer.getName() +
-                " | Connected to " + atm.getConnectedServerIP()
-            );
-        } else {
-        	header.setText("Customer: Not Logged In | Connected to )"
-        			+ atm.getConnectedServerIP());
-        }
-    }
+    private void chooseActiveAccount() {
+        Account selected = chooseAccount(accounts);
 
+        if (selected == null) {
+            return;
+        }
+
+        account = selected;
+        updateHeader();
+
+        JOptionPane.showMessageDialog(
+            this,
+            "Now using: " + account.getTYPE()
+                + " | #" + account.getAccountNumber()
+                + " | Balance: " + account.getBalance(),
+            "Account Selected",
+            JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+    
+    private void updateHeader() {
+    	if (customer != null) {
+    	    String accountText = "No account selected";
+
+    	    if (account != null) {
+    	        accountText = account.getTYPE()
+    	            + " | #" + account.getAccountNumber()
+    	            + " | Balance: " + account.getBalance();
+    	    }
+
+    	    header.setText(
+    	        "Customer: " + customer.getName()
+    	        + " | Account: " + accountText
+    	        + " | Connected to " + atm.getConnectedServerIP()
+    	    );
+    	}
+    }
+    
+    private boolean activeAccountIsCredit() {
+        return account != null && account.getTYPE() == Account.ACCOUNT_TYPE.CREDIT;
+    }
+    
     private void checkBalance() {
+        if (activeAccountIsCredit()) {
+            showError("Credit accounts can only receive transfers at the ATM.");
+            return;
+        }
+
         Response response = atm.checkBalance(account, customer);
         showResponse(response, "Balance");
     }
 
     private void deposit() {
         try {
-            Account selected = chooseAccount(accounts);
-            if (selected == null) {
+        	if (account == null) {
+        	    showError("Choose an account first.");
+        	    return;
+        	}
+            double amount = parseAmount();
+            
+            if (account.getTYPE() == Account.ACCOUNT_TYPE.CREDIT) {
+                showError("Credit accounts cannot be used for this action at the ATM.");
                 return;
             }
-            account = selected;
-            double amount = parseAmount();
 
             if (amount > atm.getDailyDepositLimit()) {
                 throw new IllegalArgumentException(
@@ -252,12 +298,16 @@ public class ATMGUI extends JFrame {
 
     private void withdraw() {
         try {
-            Account selected = chooseAccount(accounts);
-            if (selected == null) {
+        	if (account == null) {
+        	    showError("Choose an account first.");
+        	    return;
+        	}
+            double amount = parseAmount();
+            
+            if (account.getTYPE() == Account.ACCOUNT_TYPE.CREDIT) {
+                showError("Credit accounts cannot be used for this action at the ATM.");
                 return;
             }
-            account = selected;
-            double amount = parseAmount();
 
             if (amount > atm.getDailyWithdrawalLimit()) {
                 throw new IllegalArgumentException(
