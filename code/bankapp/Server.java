@@ -21,10 +21,15 @@ public class Server {
     private final Map<String, String> pendingCustomerRequestActionBySessionId = new HashMap<String, String>();
     private final Map<String, Double> pendingCustomerRequestAmountBySessionId = new HashMap<String, Double>();
     private final Map<String, Response> completedTransactionBySessionId = new HashMap<String, Response>();
-    
-    
-    
+    public Map<String, Double> dailyWithdrawals = new HashMap<>();
+    public Map<String, Double> dailyDeposits = new HashMap<>();
+    public Map<String, Date> lastReset = new HashMap<>();
 
+    
+    public static final double ATM_LIMIT = 5000.0;
+    public static final double TELLER_LIMIT = 10000.0;
+    
+    
     private static final String ACCOUNTS_FILE = "accounts.dat";
 
     public static void main(String[] args) {
@@ -753,5 +758,30 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    public void resetIfNewDay(String accountKey) {
+        Date now = new Date();
+        Date last = lastReset.get(accountKey);
+
+        if (last == null || !sameDay(last, now)) {
+            dailyWithdrawals.put(accountKey, 0.0);
+            dailyDeposits.put(accountKey, 0.0);
+            lastReset.put(accountKey, now);
+        }
+    }
+
+    private boolean sameDay(Date d1, Date d2) {
+        Calendar c1 = Calendar.getInstance();
+        Calendar c2 = Calendar.getInstance();
+
+        c1.setTime(d1);
+        c2.setTime(d2);
+
+        return c1.get(Calendar.YEAR) == c2.get(Calendar.YEAR) && c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR);
+    }
+
+    public double getLimit(Request req) {
+        return (req.getUserType() == Request.USER_TYPE.ATM) ? ATM_LIMIT : TELLER_LIMIT;
     }
 }
