@@ -31,5 +31,32 @@ class CreditAccountTest {
 		
 		assertEquals(49.51, acc.getBalance()); // 100.01 - 50.50 = 49.51
 	}
+	
+	@Test
+	void testChargeInterest() {
+		CreditAccount acc = new CreditAccount(balance2, status, typeCredit, user);
+		acc.chargeInterest();
+		
+		assertTrue(acc.getBalance() > balance2); // appproximately 101.70...
+		assertTrue(acc.getBalance() < 102.0);
+	}
+	
+	@Test
+	void testTransferToAccounts() {
+		CreditAccount acc = new CreditAccount(-100.0, status, typeCredit, user);
+		SavingsAccount acc2 = new SavingsAccount(balance1, status, typeSavings, user);
+		CheckingAccount acc3 = new CheckingAccount(balance2, status, typeChecking, user);
+		
+		acc.transferCreditToSavings(acc2, 50.0);
+		acc.transferCreditToChecking(acc3, 50.0);
+		acc.transferCreditToChecking(acc3, 50.0); // try transferring more when credit balance no longer negative
+		
+		System.out.println(acc.getBalance());
+		System.out.println(acc2.getBalance());
+		System.out.println(acc3.getBalance());
+		assertEquals(0, acc.getBalance());
+		assertEquals(100.50, acc2.getBalance());
+		assertEquals(150.01, acc3.getBalance());
+	}
 
 }
