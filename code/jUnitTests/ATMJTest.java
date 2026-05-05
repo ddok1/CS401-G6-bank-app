@@ -217,6 +217,7 @@ public class ATMJTest {
 	    assertNotNull(response);
 	    assertEquals(Response.RESPONSE_TYPE.ERROR, response.getType());
 	}
+	// Tests Freezing
 	@Test
 	public void testFrozenAccountPreventsWithdrawal() {
 	    ATM atm = new ATM("localhost");
